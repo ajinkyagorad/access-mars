@@ -38,7 +38,7 @@
     "budo": "^9.4.7",
     "derequire": "^2.0.3",
     "discify": "^1.6.0",
-    "node-sass": "^4.5.3"
+    "sass": "^1.77.0"
   },
   "keywords": [
     "vr",
