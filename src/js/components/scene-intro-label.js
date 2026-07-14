@@ -22,7 +22,7 @@ import { AudioManager } from '../core/audio-manager';
 import { TextColor, TextLightColor } from '../core/colors';
 import { Scene } from '../core/scene';
 import { EventEmitter } from 'eventemitter3';
-import TWEEN from 'tween.js';
+import TWEEN from '@tweenjs/tween.js';
 
 {
 

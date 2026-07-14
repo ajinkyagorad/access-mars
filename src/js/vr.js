@@ -19,8 +19,6 @@ import 'whatwg-fetch'
 import Promise from 'promise-polyfill';
 if ( !window.Promise ) window.Promise = Promise;
 
-require( 'aframe' );
-require( 'aframe-daydream-controller-component' );
 
 require( './third_party/three/gltf-loader' );
 require( './third_party/three/draco-loader' );
