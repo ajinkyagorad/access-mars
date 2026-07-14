@@ -7,7 +7,7 @@
     "start": "npm run build-css && npm run budo",
     "build": "browserify src/js/vr.js > public/js/vr.js",
     "buildmin": "browserify -g uglifyify src/js/vr.js > public/js/vr.js",
-    "build-css": "node-sass --include-path scss src/scss/main.scss public/css/vr.css",
+    "build-css": "sass --load-path=scss src/scss/main.scss public/css/vr.css",
     "budo": "budo src/js/vr.js:js/vr.js --dir ./public --live --verbose --port 3002",
     "discify": "browserify --full-paths src/js/vr.js | discify --open",
     "build-dev": "( cd node_modules/three && npm run build-uglify ) && ( cd node_modules/aframe && npm run dist )",
