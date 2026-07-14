@@ -27,7 +27,7 @@ const BezierEasing = require( 'bezier-easing' );
 const SkyShader = require( '../shaders/sky-shader' );
 
 const ANIM_DURATION = 1.5;
-const SKY_GEO = new THREE.SphereBufferGeometry( 5000, 64, 20 );
+const SKY_GEO = new THREE.SphereGeometry( 5000, 64, 20 );
 const EASING = BezierEasing( 0.66, 0, 0.33, 1 );
 
 if ( typeof AFRAME !== 'undefined' && AFRAME ) {

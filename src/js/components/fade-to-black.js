@@ -33,7 +33,7 @@ if ( typeof AFRAME !== 'undefined' && AFRAME ) {
 
 		init: function() {
 			this.opacity = 1;
-			this.geometry = new THREE.SphereBufferGeometry( 1.5 );
+			this.geometry = new THREE.SphereGeometry( 1.5 );
 			this.material = new THREE.MeshBasicMaterial({
 				color: new THREE.Color( 0 ),
 				opacity: this.opacity,

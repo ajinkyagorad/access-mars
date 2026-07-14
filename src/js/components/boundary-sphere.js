@@ -30,7 +30,7 @@ if ( typeof AFRAME !== 'undefined' && AFRAME ) {
 	AFRAME.registerComponent( 'boundary-sphere', {
 
 		init: function() {
-			this.geometry = new THREE.SphereBufferGeometry( 0.5, 16, 16 );
+			this.geometry = new THREE.SphereGeometry( 0.5, 16, 16 );
 			this.material = new THREE.MeshBasicMaterial({
 				side: THREE.DoubleSide,
 				visible: false

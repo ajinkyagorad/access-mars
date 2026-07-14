@@ -316,9 +316,8 @@ THREE.DRACOLoader.prototype = {
         // drawMode was removed from BufferGeometry in Three.js r125+.
         // The renderer now handles draw mode via material settings.
         if (geometryType == dracoDecoder.TRIANGULAR_MESH) {
-          geometry.setIndex(new(geometryBuffer.indices.length > 65535 ?
-                THREE.Uint32BufferAttribute : THREE.Uint16BufferAttribute)
-              (geometryBuffer.indices, 1));
+          geometry.setIndex(new THREE.BufferAttribute(
+              (geometryBuffer.indices.length > 65535) ? new Uint32Array(geometryBuffer.indices) : new Uint16Array(geometryBuffer.indices), 1));
         }
         geometry.setAttribute('position',
             new THREE.Float32BufferAttribute(geometryBuffer.vertices, 3));

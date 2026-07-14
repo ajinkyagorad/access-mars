@@ -107,9 +107,11 @@ if ( typeof AFRAME !== 'undefined' && AFRAME ) {
 
 			// Force the text to always be render in front
 			this.text = this.el.object3D.children[ 0 ];
-			this.text.material.depthTest = false;
-			this.text.material.transparent = true;
-			this.text.material.needsUpdate = true;
+			if ( this.text ) {
+				this.text.material.depthTest = false;
+				this.text.material.transparent = true;
+				this.text.material.needsUpdate = true;
+			}
 		},
 
 		tick: function( t, dt ) {

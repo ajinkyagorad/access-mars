@@ -17,7 +17,7 @@
  */
 
 const R = 6000 * 2;
-const BLACKOUT_SKY_GEO = new THREE.SphereBufferGeometry( 6000, 64, 20 );
+const BLACKOUT_SKY_GEO = new THREE.SphereGeometry( 6000, 64, 20 );
 
 const SkyShader = require( '../shaders/sky-shader' );
 

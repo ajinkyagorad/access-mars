@@ -22,7 +22,7 @@ THREE.GLTF2Loader = ( function () {
 
 			var scope = this;
 
-			var path = this.path && ( typeof this.path === "string" ) ? this.path : THREE.Loader.prototype.extractUrlBase( url );
+			var path = this.path && ( typeof this.path === "string" ) ? this.path : url.substring( 0, url.lastIndexOf( '/' ) + 1 );
 
 			var loader = new THREE.FileLoader( scope.manager );
 
