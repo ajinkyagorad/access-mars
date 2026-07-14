@@ -5,7 +5,7 @@
   "license": "Apache-2.0",
   "scripts": {
     "start": "npm run build-css && npm run copy-aframe && npm run budo",
-    "copy-aframe": "copy /Y node_modules\\aframe\\dist\\aframe-master.min.js public\\js\\aframe.min.js",
+    "copy-aframe": "node -e \"require('fs').copyFileSync('node_modules/aframe/dist/aframe-master.min.js', 'public/js/aframe.min.js')\"",
     "build": "npm run copy-aframe && browserify --exclude=aframe src/js/vr.js > public/js/vr.js",
     "buildmin": "npm run copy-aframe && browserify -g uglifyify --exclude=aframe src/js/vr.js > public/js/vr.js",
     "build-css": "sass --load-path=scss src/scss/main.scss public/css/vr.css",
