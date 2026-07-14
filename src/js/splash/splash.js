@@ -48,7 +48,7 @@ export function initSplash() {
 
     const enterVR = document.createElement( 'button' );
     enterVR.classList.add( 'webvr-ui-button' );
-    enterVR.innerHTML = '<div class="webvr-ui-title" style="display: initial;">TEST</div>';
+    enterVR.innerHTML = '<div class="webvr-ui-title" style="display: initial;">ENTER 360</div>';
 
     // create the Enter 360 Button that is full-size and replaces Enter VR
     function createEnter360Button() {
@@ -169,7 +169,12 @@ export function initSplash() {
 				}, always )
 				.then( always );
 		})
-        .catch(console.error.bind(console));
+        .catch(function(err) {
+            console.error('XR detection failed, showing ENTER 360 fallback:', err);
+            // Fallback: ensure the ENTER 360 button is visible even if XR detection fails
+            enterVR.innerHTML = '<div class="webvr-ui-title" style="display: initial;">ENTER 360</div>';
+            enterVRContainer.style.display = '';
+        });
 
     function sceneEntered( modeType ) {
 
