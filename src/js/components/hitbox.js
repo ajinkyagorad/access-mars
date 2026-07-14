@@ -32,7 +32,7 @@
  * do this.
  */
 
-const HITBOX_GEOMETRY = new THREE.PlaneBufferGeometry( 1, 1 );
+const HITBOX_GEOMETRY = new THREE.PlaneGeometry( 1, 1 );
 // const HITBOX_MATERIAL = new THREE.MeshBasicMaterial( { color: 0xFF00FF, side: THREE.DoubleSide, transparent: true, opacity: 0.25 } );
 const HITBOX_MATERIAL = new THREE.MeshBasicMaterial( { side: THREE.DoubleSide, visible: false } );
 

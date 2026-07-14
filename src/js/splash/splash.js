@@ -17,7 +17,6 @@
  *
  */
 
-import * as webvrui from 'webvr-ui/build/webvr-ui';
 import { Scene } from '../core/scene';
 import { PlatformUtils } from '../utils/platform-utils';
 import { ExitButton } from './exit-button';
@@ -50,19 +49,6 @@ export function initSplash() {
     const enterVR = document.createElement( 'button' );
     enterVR.classList.add( 'webvr-ui-button' );
     enterVR.innerHTML = '<div class="webvr-ui-title" style="display: initial;">TEST</div>';
-
-	// create the webvr-ui Button
-    const enterVRButton = new webvrui.EnterVRButton( null, {
-        color: '#846852',
-		corners : '4',
-        textEnterVRTitle: 'loading'.toUpperCase()
-	});
-
-
-    enterVRButton.domElement.addEventListener( 'click', () => {
-        playVideo();
-        enterVRButton.setTitle( 'WAITING' );
-    }, true);
 
     // create the Enter 360 Button that is full-size and replaces Enter VR
     function createEnter360Button() {
@@ -111,34 +97,24 @@ export function initSplash() {
         createEnter360Button();
     }
 
-	enterVRButton.on( 'ready', () => {
-	    const display = enterVRButton.manager.defaultDisplay;
-
-		if( !PlatformUtils.isTablet() ) {
-            enterVRContainer.insertBefore(enterVRButton.domElement, enterVRContainer.firstChild);
-        }
-
-        if( !PlatformUtils.isGearVR() ) {
-            tryItIn360.style.display = 'inline-block';
-        }
-	});
-
-	enterVRButton.on( 'enter', () => {
-        hideSplash();
-		onEnterVR();
-	});
-
-	enterVRButton.on( 'exit', () => {
-        showSplash();
-		aScene.exitVR();
-		aScene.pause();
-	});
-
-	enterVRButton.on( 'error', ()=>{
-		if(enterVRButton.state === webvrui.State.ERROR_NO_PRESENTABLE_DISPLAYS || enterVRButton.state === webvrui.State.ERROR_BROWSER_NOT_SUPPORTED){
-		    createEnter360Button();
+	// Check WebXR support to determine VR availability
+	function checkWebXRSupport() {
+		if ( navigator.xr ) {
+			return navigator.xr.isSessionSupported( 'immersive-vr' );
 		}
-	});
+		return Promise.resolve( false );
+	}
+
+	// Insert the VR button (shows "LOADING" until we know support)
+	if ( !PlatformUtils.isTablet() ) {
+		enterVRContainer.insertBefore( enterVR, enterVRContainer.firstChild );
+	}
+
+	// Attach click handler for VR entry
+	enterVR.addEventListener( 'click', () => {
+		playVideo();
+		enterVR.innerHTML = '<div class="webvr-ui-title" style="display: initial;">WAITING</div>';
+	}, true);
 
     function tryToMakeFullScreen() {
         if (screenfull.enabled) {
@@ -149,9 +125,6 @@ export function initSplash() {
     aSceneLoaded
         //load the scene, say "loading"
         .then(()=>{
-
-			// now that we have a renderer, make sure webvr-ui gets the canvas
-			enterVRButton.sourceCanvas = aScene.renderer.domElement;
 
 			// dont run the aScene in the background
             const isLinkFromiOS = parsedQueryString.site;
@@ -171,18 +144,30 @@ export function initSplash() {
 			// audio and everything is loaded now
 			enterVRContainer.classList.add( 'ready' );
 			const always = () => {
-                // if WebVR is available and its not polyfill on a tablet
-                // if (enterVRButton.state === webvrui.State.READY_TO_PRESENT && !( PlatformUtils.isMobile() && PlatformUtils.isTablet())) {
-                if (enterVRButton.state === webvrui.State.READY_TO_PRESENT && !( PlatformUtils.isMobile() && PlatformUtils.isTablet())) {
-                    enterVRButton.setTitle( 'Enter VR'.toUpperCase() );
-                } else if (PlatformUtils.isTablet() || ( enterVRButton.state || '' ).indexOf( 'error' ) >= 0) {
-
+                // if WebXR is available and its not polyfill on a tablet
+                if ( vrSupported && !( PlatformUtils.isMobile() && PlatformUtils.isTablet())) {
+                    enterVR.innerHTML = '<div class="webvr-ui-title" style="display: initial;">ENTER VR</div>';
+					enterVR.onclick = () => {
+						playVideo();
+						hideSplash();
+						onEnterVR();
+					};
+                } else if (PlatformUtils.isTablet() || !vrSupported) {
                     document.querySelector( '.webvr-ui-title' ).innerHTML = SVG_360 + '<span>ENTER 360</span>';
                     document.querySelector( '.webvr-ui-title' ).classList.add( 'mode360' );
                 }
             };
-            return enterVRButton.getVRDisplay()
-                .then(always, always);
+			var vrSupported = false;
+            return checkWebXRSupport()
+                .then( function( supported ) {
+					vrSupported = supported;
+					if ( !supported && !PlatformUtils.isTablet() ) {
+						// VR not available on non-tablet — show 360 fallback
+						enterVRContainer.innerHTML = '';
+						createEnter360Button();
+					}
+				}, always )
+				.then( always );
 		})
         .catch(console.error.bind(console));
 
@@ -194,18 +179,12 @@ export function initSplash() {
             // Defaults to landing_site.
             const site = parsedQueryString.site ? parsedQueryString.site : 'landing_site';
 
-            // console.log( '' );
-            // console.log( 'enter' );
-            // console.log( 'modeType:', modeType );
-
             Scene.init( parsedQueryString );
             Scene.setModeType( modeType );
             Scene.loadSite( site );
 
             // gets controller type using
             PlatformUtils.getControllerType( ( clientType, info ) => {
-                // console.log( 'controllerType:', clientType );
-                // console.log( 'info:', info );
                 Scene.setControllerType( clientType, info );
                 Scene.tryAddingController( info );
             });

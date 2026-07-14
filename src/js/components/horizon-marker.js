@@ -40,8 +40,8 @@ const FLAG_Y_OFFSET = 54;
 const FLAG_Y_CENTER = FLAG_Y_OFFSET + MARKER_DIAMETER / 2;
 const DEG2RAD = Math.PI / 180;
 
-const FLAG_GEOMETRY = new THREE.PlaneBufferGeometry( MARKER_DIAMETER, MARKER_DIAMETER );
-const POLE_GEOMETRY = new THREE.PlaneBufferGeometry( MARKER_DIAMETER, 1 );
+const FLAG_GEOMETRY = new THREE.PlaneGeometry( MARKER_DIAMETER, MARKER_DIAMETER );
+const POLE_GEOMETRY = new THREE.PlaneGeometry( MARKER_DIAMETER, 1 );
 	  POLE_GEOMETRY.translate( 0, -0.5, 0 );
 
 const POLE_MATERIAL = new THREE.ShaderMaterial({

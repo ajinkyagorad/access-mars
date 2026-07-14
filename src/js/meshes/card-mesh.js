@@ -26,7 +26,7 @@ import { MathUtils } from '../utils/math-utils';
 const BezierEasing = require( 'bezier-easing' );
 const InfoCardShader = require( '../shaders/info-card-flat-shader' );
 
-const PLANE_GEO = new THREE.PlaneBufferGeometry( 1, 1 );
+const PLANE_GEO = new THREE.PlaneGeometry( 1, 1 );
 
 export class CardMesh extends EventEmitter {
 

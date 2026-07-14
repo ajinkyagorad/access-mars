@@ -25,7 +25,7 @@ import { TextColor, TextLightColor, TextLightColorHex } from '../core/colors';
 const ColorMaskShader = require( '../shaders/color-mask-shader' );
 const BezierEasing = require( 'bezier-easing' );
 
-const PLANE_GEO = new THREE.PlaneBufferGeometry( 1, 1 );
+const PLANE_GEO = new THREE.PlaneGeometry( 1, 1 );
 const EASING = BezierEasing( 0.66, 0, 0.33, 1 );
 const XFADE_DURATION = 0.4;
 

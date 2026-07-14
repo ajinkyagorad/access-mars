@@ -40,7 +40,7 @@ if ( typeof AFRAME !== 'undefined' && AFRAME ) {
 			this.scale = this.data.scale;
 
 			this.cameraPosition = new THREE.Vector3();
-			this.geometry = new THREE.PlaneBufferGeometry( 1, 1 );
+			this.geometry = new THREE.PlaneGeometry( 1, 1 );
 
 			this.material = new THREE.ShaderMaterial({
 				uniforms: ControllerDotShader.uniforms,

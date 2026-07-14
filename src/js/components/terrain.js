@@ -45,7 +45,7 @@ const TEXTURE_SUFFIXES = {
 const CENTER_TILE_IDS = [ '03333333', '12222222', '21111111', '30000000' ];
 
 const TERRAIN_DIR = 'terrain/';
-const LOAD_PROXY_GEO = new THREE.PlaneBufferGeometry( 0.01, 0.01 );
+const LOAD_PROXY_GEO = new THREE.PlaneGeometry( 0.01, 0.01 );
 const ANIM_IN_DURATION = 1.0;
 
 if ( typeof AFRAME !== 'undefined' && AFRAME ) {
@@ -640,11 +640,10 @@ class SimpleTerrain {
 	setupMesh() {
 		var terrainGeometry = this.mesh.geometry;
 
-		// Convert the terrain's BufferGeometry to regular Geometry and back again. This
-		// forces mergeVertices() to be called, which removes all duplicate vertices which
-		// are left over from the mesh simplification process.
-		terrainGeometry = new THREE.Geometry().fromBufferGeometry( terrainGeometry );
-		terrainGeometry = new THREE.BufferGeometry().fromGeometry( terrainGeometry );
+		// Merge duplicate vertices left over from the mesh simplification process.
+		// In Three.js r125+, BufferGeometry.mergeVertices() replaces the old
+		// Geometry.fromBufferGeometry() / BufferGeometry.fromGeometry() round-trip.
+		terrainGeometry.mergeVertices();
 
 		// Generate barycentric coordinates for each triangle vertex. This is used by the edge-shader
 		// to generate a wireframe effect.
@@ -657,7 +656,7 @@ class SimpleTerrain {
 		}
 
 		// Add the barycentric coordinate array to the terrain geometry as a vertex attribute
-		terrainGeometry.addAttribute( 'center', new THREE.BufferAttribute( centers, 3 ) );
+		terrainGeometry.setAttribute( 'center', new THREE.BufferAttribute( centers, 3 ) );
 
 		// Remove unused geometry attributes
 		terrainGeometry.removeAttribute( 'uv' );

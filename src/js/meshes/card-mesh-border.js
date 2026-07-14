@@ -114,9 +114,9 @@ export class CardMeshBorder extends CardMesh {
 		// Create a new BufferGeometry object and add the required attributes to it
 		this.borderGeometry = new THREE.BufferGeometry();
 		this.borderGeometry.setIndex( indices );
-		this.borderGeometry.addAttribute( 'position', new THREE.Float32BufferAttribute( vertices, 3 ) );
-		this.borderGeometry.addAttribute( 'normal', new THREE.Float32BufferAttribute( normals, 3 ) );
-		this.borderGeometry.addAttribute( 'uv', new THREE.Float32BufferAttribute( uvs, 2 ) );
+		this.borderGeometry.setAttribute( 'position', new THREE.Float32BufferAttribute( vertices, 3 ) );
+		this.borderGeometry.setAttribute( 'normal', new THREE.Float32BufferAttribute( normals, 3 ) );
+		this.borderGeometry.setAttribute( 'uv', new THREE.Float32BufferAttribute( uvs, 2 ) );
 
 		// Update the border mesh geometry
 		this.borderMesh.geometry = this.borderGeometry;

@@ -35,7 +35,7 @@ if ( typeof AFRAME !== 'undefined' && AFRAME ) {
 
 			this.isInteractive = false;
 
-			this.geometry = new THREE.PlaneBufferGeometry( this.data.width, this.data.length );
+			this.geometry = new THREE.PlaneGeometry( this.data.width, this.data.length );
 			this.geometry.rotateX( Math.PI / -2 );
 			this.geometry.translate( 0, 0, this.data.length / -2 );
 

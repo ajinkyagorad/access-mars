@@ -34,7 +34,7 @@ MeshLine.prototype.setGeometry = function( g, c ) {
 	this.positions = [];
 	this.counters = [];
 
-	if( g instanceof THREE.Geometry ) {
+	if( typeof THREE.Geometry !== 'undefined' && g instanceof THREE.Geometry ) {
 		for( var j = 0; j < g.vertices.length; j++ ) {
 			var v = g.vertices[ j ];
 			var c = j/g.vertices.length;
@@ -46,7 +46,17 @@ MeshLine.prototype.setGeometry = function( g, c ) {
 	}
 
 	if( g instanceof THREE.BufferGeometry ) {
-		// read attribute positions ?
+		var pos = g.attributes.position;
+		if( pos ) {
+			var l = pos.array.length / 3;
+			for( var j = 0; j < l; j++ ) {
+				var c = j / l;
+				this.positions.push( pos.array[ j * 3 ], pos.array[ j * 3 + 1 ], pos.array[ j * 3 + 2 ] );
+				this.positions.push( pos.array[ j * 3 ], pos.array[ j * 3 + 1 ], pos.array[ j * 3 + 2 ] );
+				this.counters.push( c );
+				this.counters.push( c );
+			}
+		}
 	}
 
 	if( g instanceof Float32Array || g instanceof Array ) {
@@ -168,15 +178,15 @@ MeshLine.prototype.process = function() {
 		this.attributes.uv.needsUpdate = true;
 		this.attributes.index.copyArray(new Uint16Array(this.indices_array));
 		this.attributes.index.needsUpdate = true;
-    }
+	   }
 
-	this.geometry.addAttribute( 'position', this.attributes.position );
-	this.geometry.addAttribute( 'previous', this.attributes.previous );
-	this.geometry.addAttribute( 'next', this.attributes.next );
-	this.geometry.addAttribute( 'side', this.attributes.side );
-	this.geometry.addAttribute( 'width', this.attributes.width );
-	this.geometry.addAttribute( 'uv', this.attributes.uv );
-	this.geometry.addAttribute( 'counters', this.attributes.counters );
+	this.geometry.setAttribute( 'position', this.attributes.position );
+	this.geometry.setAttribute( 'previous', this.attributes.previous );
+	this.geometry.setAttribute( 'next', this.attributes.next );
+	this.geometry.setAttribute( 'side', this.attributes.side );
+	this.geometry.setAttribute( 'width', this.attributes.width );
+	this.geometry.setAttribute( 'uv', this.attributes.uv );
+	this.geometry.setAttribute( 'counters', this.attributes.counters );
 
 	this.geometry.setIndex( this.attributes.index );
 

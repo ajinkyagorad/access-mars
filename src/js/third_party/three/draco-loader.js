@@ -26,7 +26,7 @@ THREE.DRACOLoader = function(dracoPath, dracoDecoderType, manager) {
     this.attributeOptions = {};
     this.dracoDecoderType =
         (dracoDecoderType !== undefined) ? dracoDecoderType : {};
-    this.drawMode = THREE.TrianglesDrawMode;
+    this.drawMode = 0; // THREE.TrianglesDrawMode (deprecated/removed in r125+)
     this.dracoSrcPath = 'third_party/draco/';
     THREE.DRACOLoader.loadDracoDecoder(this);
 };
@@ -287,7 +287,7 @@ THREE.DRACOLoader.prototype = {
 
         // For mesh, we need to generate the faces.
         if (geometryType == dracoDecoder.TRIANGULAR_MESH) {
-          if (this.drawMode === THREE.TriangleStripDrawMode) {
+          if (this.drawMode === 1) { // THREE.TriangleStripDrawMode (deprecated)
             var stripsArray = new dracoDecoder.DracoInt32Array();
             var numStrips = decoder.GetTriangleStripsFromMesh(
                 dracoGeometry, stripsArray);
@@ -313,13 +313,14 @@ THREE.DRACOLoader.prototype = {
 
         // Import data to Three JS geometry.
         var geometry = new THREE.BufferGeometry();
-        geometry.drawMode = this.drawMode;
+        // drawMode was removed from BufferGeometry in Three.js r125+.
+        // The renderer now handles draw mode via material settings.
         if (geometryType == dracoDecoder.TRIANGULAR_MESH) {
           geometry.setIndex(new(geometryBuffer.indices.length > 65535 ?
                 THREE.Uint32BufferAttribute : THREE.Uint16BufferAttribute)
               (geometryBuffer.indices, 1));
         }
-        geometry.addAttribute('position',
+        geometry.setAttribute('position',
             new THREE.Float32BufferAttribute(geometryBuffer.vertices, 3));
         var posTransform = new dracoDecoder.AttributeQuantizationTransform();
         if (posTransform.InitFromAttribute(posAttribute)) {
@@ -336,15 +337,15 @@ THREE.DRACOLoader.prototype = {
           }
         }
         dracoDecoder.destroy(posTransform);
-        geometry.addAttribute('color',
+        geometry.setAttribute('color',
             new THREE.Float32BufferAttribute(geometryBuffer.colors,
                                              numColorCoordinateComponents));
         if (normalAttId != -1) {
-          geometry.addAttribute('normal',
+          geometry.setAttribute('normal',
               new THREE.Float32BufferAttribute(geometryBuffer.normals, 3));
         }
         if (texCoordAttId != -1) {
-          geometry.addAttribute('uv',
+          geometry.setAttribute('uv',
               new THREE.Float32BufferAttribute(geometryBuffer.uvs, 2));
         }
 

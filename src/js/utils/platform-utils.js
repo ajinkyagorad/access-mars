@@ -33,10 +33,11 @@ class StaticPlatformUtils {
 
 	/**
 	 * Returns true if the user is on a gear vr device
+	 * Note: isGearVR was removed in A-Frame 1.x; GearVR is discontinued
 	 */
 	isGearVR() {
-    	return AFRAME.utils.device.isGearVR();
-    }
+	   	return false;
+	   }
 
     /**
      * Returns true if the device is a tablet.
@@ -87,28 +88,21 @@ class StaticPlatformUtils {
 	 * name, if any are found.
 	 */
 	getControllerType( callBack ) {
-	    navigator.getVRDisplays().then( displays => {
-
-            const isFullHDDisplay = displays.length > 0 && displays[ 0 ].isPresenting;
-
-            if( isFullHDDisplay ) {
-            	const display = displays[ 0 ];
-
-                if ( display.displayName.includes( 'Cardboard' ) ) {
-                    callBack( 'mouse-touch', display.displayName );
-                } else if ( display.displayName.includes( 'Daydream' ) || display.stageParameters === null ) {
-                    callBack( 'controller', display.displayName );
-                } else {
-                    callBack( 'controller', display.displayName );
-                }
-
-            } else {
-                callBack( 'mouse-touch', 'other' );
-            }
-
-        }).catch( displays => {
-            callBack( 'mouse-touch', 'other' );
-        });
+		// Use WebXR to detect VR support instead of deprecated navigator.getVRDisplays()
+		if ( navigator.xr ) {
+			navigator.xr.isSessionSupported( 'immersive-vr' ).then( supported => {
+				if ( supported ) {
+					// WebXR is available — use controller mode (A-Frame 1.x auto-detects controller type)
+					callBack( 'controller', 'webxr' );
+				} else {
+					callBack( 'mouse-touch', 'other' );
+				}
+			}).catch( () => {
+				callBack( 'mouse-touch', 'other' );
+			});
+		} else {
+			callBack( 'mouse-touch', 'other' );
+		}
 	}
 
     /**

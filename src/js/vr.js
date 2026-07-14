@@ -68,13 +68,6 @@ import { testCompatibility } from './utils/compatibility';
 THREE.TextureLoader.prototype.crossOrigin = undefined;
 THREE.ImageLoader.prototype.crossOrigin = undefined;
 
-// used to show the correct ui overlay in vr mode on mobile devices and daydream
-if ( WebVRConfig ) {
-	WebVRConfig.CARDBOARD_UI_DISABLED = true;
-	WebVRConfig.ENABLE_DEPRECATED_API = true;
-	WebVRConfig.ROTATE_INSTRUCTIONS_DISABLED = false;
-}
-
 document.addEventListener("DOMContentLoaded", () => {
 	testCompatibility();
 	initSplash();

@@ -94,12 +94,11 @@ if ( typeof AFRAME !== 'undefined' && AFRAME ) {
 		play: function() {
 			this.numPoints = this.raycasterEl.getAttribute( 'better-raycaster' ).numArcPoints;
 
-			// Populate  mesh vertices with zero vectors. It will be filled with
+			// Populate mesh positions with zero vectors. It will be filled with
 			// actual vectors when the cursor is updated
-			this.geometry = new THREE.Geometry();
-			for ( let i = 0; i < this.numPoints + 1; i++ ) {
-				this.geometry.vertices.push( new THREE.Vector3() );
-			}
+			this.geometry = new THREE.BufferGeometry();
+			var positions = new Float32Array( ( this.numPoints + 1 ) * 3 );
+			this.geometry.setAttribute( 'position', new THREE.BufferAttribute( positions, 3 ) );
 
 			this.line = new MeshLine();
 			this.line.setGeometry( this.geometry );
@@ -132,10 +131,15 @@ if ( typeof AFRAME !== 'undefined' && AFRAME ) {
 			if ( !this.parabolaPoints.length ) return;
 			if ( !this.isOverTerrain ) return;
 
-			// Transfer updated parabola points to the mesh vertices
-			this.geometry.vertices = this.geometry.vertices.map( ( v, i ) => {
-				return this.parabolaPoints[ Math.min( i, this.parabolaPoints.length - 1 ) ];
-			});
+			// Transfer updated parabola points to the mesh positions
+			var posAttr = this.geometry.attributes.position;
+			for ( let i = 0; i < this.parabolaPoints.length; i++ ) {
+				var p = this.parabolaPoints[ i ];
+				posAttr.array[ i * 3 ] = p.x;
+				posAttr.array[ i * 3 + 1 ] = p.y;
+				posAttr.array[ i * 3 + 2 ] = p.z;
+			}
+			posAttr.needsUpdate = true;
 
 			this.line.setGeometry( this.geometry );
 
