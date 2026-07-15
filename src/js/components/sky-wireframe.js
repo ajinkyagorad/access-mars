@@ -22,7 +22,7 @@
 
 import { FogColor } from '../core/colors';
 
-const WIRE_SKY_GEO = new THREE.IcosahedronBufferGeometry( 5400, 2 );
+const WIRE_SKY_GEO = new THREE.IcosahedronGeometry( 5400, 2 );
 
 if ( typeof AFRAME !== 'undefined' && AFRAME ) {
 	AFRAME.registerComponent( 'sky-wireframe', {
