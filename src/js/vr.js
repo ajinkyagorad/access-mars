@@ -20,6 +20,8 @@ import Promise from 'promise-polyfill';
 if ( !window.Promise ) window.Promise = Promise;
 
 
+require( './third_party/three/utils/BufferGeometryUtils' );
+require( './third_party/three/utils/SkeletonUtils' );
 require( './third_party/three/gltf-loader' );
 require( './third_party/three/draco-loader' );
 

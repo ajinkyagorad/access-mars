@@ -66,8 +66,8 @@ var Vector3 = THREE.Vector3;
 var VectorKeyframeTrack = THREE.VectorKeyframeTrack;
 var SRGBColorSpace = THREE.SRGBColorSpace;
 var InstancedBufferAttribute = THREE.InstancedBufferAttribute;;
-var toTrianglesDrawMode = THREE.BufferGeometryUtils.toTrianglesDrawMode;
-var clone = THREE.SkeletonUtils.clone;
+import { toTrianglesDrawMode } from '../utils/BufferGeometryUtils.js';
+import { clone } from '../utils/SkeletonUtils.js';
 
 /**
  * A loader for the glTF 2.0 format.

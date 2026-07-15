@@ -31,7 +31,7 @@ class StaticGLTFLoader extends EventEmitter {
 	load( url ) {
 
 		if ( !this.gltfLoader ) {
-			this.gltfLoader = new THREE.GLTF2Loader();
+			this.gltfLoader = new THREE.GLTFLoader();
 		}
 
 		return new Promise( ( resolve, reject ) => {
