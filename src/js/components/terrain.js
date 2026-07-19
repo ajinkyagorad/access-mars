@@ -76,12 +76,12 @@ if ( typeof AFRAME !== 'undefined' && AFRAME ) {
 			// Listen for stateremoved event for showing the collision or terrain meshes
 			this.el.addEventListener( 'stateadded', event => {
 
-				if ( event.detail.state === 'show-simple' ) {
+				if ( event.detail === 'show-simple' ) {
 					this.isSimpleVisible = true;
 					if ( this.collision ) this.collision.setVisible( this.isSimpleVisible );
 				}
 
-				if ( event.detail.state === 'show-terrain' ) {
+				if ( event.detail === 'show-terrain' ) {
 					this.isTerrainVisible = true;
 					this.setVisible( this.isTerrainVisible );
 				}
@@ -91,12 +91,12 @@ if ( typeof AFRAME !== 'undefined' && AFRAME ) {
 			// Listen for stateremoved event for hiding the collision or terrain meshes
 			this.el.addEventListener( 'stateremoved', event => {
 
-				if ( event.detail.state === 'show-simple' ) {
+				if ( event.detail === 'show-simple' ) {
 					this.isSimpleVisible = false;
 					if ( this.collision ) this.collision.setVisible( this.isSimpleVisible );
 				}
 
-				if ( event.detail.state === 'show-terrain' ) {
+				if ( event.detail === 'show-terrain' ) {
 					this.isTerrainVisible = false;
 					this.setVisible( this.isTerrainVisible );
 				}

@@ -83,13 +83,13 @@ if ( typeof AFRAME !== 'undefined' && AFRAME ) {
 
 			// Add the 'visible' state to the child entities whenever the parent card adds it.
 			this.parentCard.addEventListener( 'stateadded', event => {
-				if ( event.detail.state !== 'visible' ) return;
+				if ( event.detail !== 'visible' ) return;
 				this.numberLabel.addState( 'visible' );
 			});
 
 			// Remove the 'visible' state to the child entities whenever the parent card removes it.
 			this.parentCard.addEventListener( 'stateremoved', event => {
-				if ( event.detail.state !== 'visible' ) return;
+				if ( event.detail !== 'visible' ) return;
 				this.numberLabel.removeState( 'visible' );
 			});
 

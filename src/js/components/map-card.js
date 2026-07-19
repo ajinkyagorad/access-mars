@@ -126,14 +126,14 @@ if ( typeof AFRAME !== 'undefined' && AFRAME ) {
 
 			// Show the card when the 'visible' state is added
 			this.el.addEventListener( 'stateadded', event => {
-				if ( event.detail.state !== 'visible' ) return;
+				if ( event.detail !== 'visible' ) return;
 				ga( 'send', 'event', 'map-card', 'opened', '' );
 				this.onShow();
 			});
 
 			// Dismiss the card when the 'visible' state is removed
 			this.el.addEventListener( 'stateremoved', event => {
-				if ( event.detail.state !== 'visible' ) return;
+				if ( event.detail !== 'visible' ) return;
 				this.onHide();
 			})
 

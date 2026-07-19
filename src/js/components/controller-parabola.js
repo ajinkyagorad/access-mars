@@ -80,7 +80,7 @@ if ( typeof AFRAME !== 'undefined' && AFRAME ) {
 			// Hide the arc whenever the scene is not interactive
 			this.el.sceneEl.addEventListener( 'stateremoved', event => {
 				if ( event.target !== this.el.sceneEl ) return;
-				if ( event.detail.state === 'interactive' ) this.mesh.visible = false;
+				if ( event.detail === 'interactive' ) this.mesh.visible = false;
 			});
 
 			// event for exiting vr

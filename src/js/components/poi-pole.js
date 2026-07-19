@@ -96,7 +96,7 @@ if ( typeof AFRAME !== 'undefined' && AFRAME ) {
 
 			// Offset the ring's "timeline" by the delay constant
 			this.el.addEventListener( 'stateadded', event => {
-				if ( event.detail.state !== 'visible' ) return;
+				if ( event.detail !== 'visible' ) return;
 				this.reset();	
 			});
 		},

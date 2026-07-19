@@ -36,11 +36,11 @@ if ( typeof AFRAME !== 'undefined' && AFRAME ) {
 				
 				// Listen for the animate state and begin playback
 				this.el.addEventListener( 'stateadded', event => {
-					if ( event.detail.state === 'animate' ) {
+					if ( event.detail === 'animate' ) {
 						this.startAnimation();
 					}
 
-					if ( event.detail.state === 'complete' ) {
+					if ( event.detail === 'complete' ) {
 						this.jumpToEndAnimation();
 					}
 				});
@@ -124,6 +124,11 @@ if ( typeof AFRAME !== 'undefined' && AFRAME ) {
 			this.scene.removeObjectsWithType( 'LINES' );
 			this.scene.removeObjectsWithType( 'SKYCRANE' );
 			this.scene.removeObjectsWithType( 'IMAGEPLANE' );
+
+			// The skycrane's tether wires are untagged in the C4D export and
+			// sit next to the SKYCRANE node, not inside it — remove them by
+			// name so nothing is left hanging in the sky after landing.
+			this.scene.removeObjectByShortName( 'wires' );
 
 			this.el.removeState( 'animate' );
 			this.el.emit( 'complete', null, false );

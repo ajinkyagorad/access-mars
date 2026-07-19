@@ -83,13 +83,13 @@ if ( typeof AFRAME !== 'undefined' && AFRAME ) {
 			});
 
 			this.el.addEventListener( 'stateadded', event => {
-				if ( event.detail.state !== 'visible' ) return;
+				if ( event.detail !== 'visible' ) return;
 				if ( this.transitionInDelay <= 0 ) return;
 				this.delayCounter = 1;
 			});
 
 			this.el.addEventListener( 'stateremoved', event => {
-				if ( event.detail.state !== 'visible' ) return;
+				if ( event.detail !== 'visible' ) return;
 				this.delayCounter = 0;
 			});
 		},

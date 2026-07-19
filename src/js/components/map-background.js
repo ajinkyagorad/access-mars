@@ -64,7 +64,7 @@ if ( typeof AFRAME !== 'undefined' && AFRAME ) {
 
 			// Reset the delay counter when the 'visible' state is added
 			this.el.addEventListener( 'stateadded', event => {
-				if ( event.detail.state !== 'visible' ) return;
+				if ( event.detail !== 'visible' ) return;
 				this.delayCounter = 1;
 			})
 		},

@@ -83,17 +83,37 @@ if ( typeof AFRAME !== 'undefined' && AFRAME ) {
 			this.el.appendChild( this.bodyText );
 
 			this.el.parentNode.addEventListener( 'stateadded', event => {
-				if ( event.detail.state === 'visible' ) this.onShow();
+				if ( event.detail === 'visible' ) this.onShow();
 			});
 
 			this.el.parentNode.addEventListener( 'stateremoved', event => {
-				if ( event.detail.state === 'visible' ) this.onHide();
+				if ( event.detail === 'visible' ) this.onHide();
 			});
 		},
 
 		update: function() {
-			const parentWidth = this.el.parentNode.getAttribute( 'orientation-card' ).width;
-			const parentHeight = this.el.parentNode.getAttribute( 'orientation-card' ).height;
+			const parentData = this.el.parentNode.getAttribute( 'orientation-card' );
+
+			// If this column's update runs before the parent card's component
+			// has finished initializing, getAttribute() returns the raw
+			// attribute string instead of component data, and every derived
+			// size/position below becomes NaN — permanently breaking the
+			// column's meshes. Defer until the parent component is ready.
+			if ( !parentData || typeof parentData.width !== 'number' || typeof parentData.height !== 'number' ) {
+				if ( !this.parentReadyListener ) {
+					this.parentReadyListener = event => {
+						if ( event.detail.name !== 'orientation-card' ) return;
+						this.el.parentNode.removeEventListener( 'componentinitialized', this.parentReadyListener );
+						this.parentReadyListener = null;
+						this.update();
+					};
+					this.el.parentNode.addEventListener( 'componentinitialized', this.parentReadyListener );
+				}
+				return;
+			}
+
+			const parentWidth = parentData.width;
+			const parentHeight = parentData.height;
 
 			const startX = parentWidth / -2;
 			const columnWidth = parentWidth / 3;

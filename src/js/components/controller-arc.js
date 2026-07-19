@@ -71,14 +71,14 @@ if ( typeof AFRAME !== 'undefined' && AFRAME ) {
 
 			this.el.sceneEl.addEventListener( 'stateremoved', event => {
 				if ( event.target !== this.el.sceneEl ) return;
-				if ( event.detail.state !== 'interactive' ) return;
+				if ( event.detail !== 'interactive' ) return;
 
 				this.mesh.visible = false;
 			});
 
 			this.el.sceneEl.addEventListener( 'stateadded', event => {
 				if ( event.target !== this.el.sceneEl ) return;
-				if ( event.detail.state !== 'interactive' ) return;
+				if ( event.detail !== 'interactive' ) return;
 
 				this.mesh.visible = true;
 			});

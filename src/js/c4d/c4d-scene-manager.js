@@ -166,9 +166,18 @@ export class C4DSceneManager extends EventEmitter {
 	 */
 	removeObjectsWithType( type ) {
 		this.objectsByType[ type ].forEach( obj => {
-			const mesh = C4DUtils.getChildWithType( obj, 'Mesh' );
-			obj.remove( mesh );
+			obj.removeFromParent();
 		});
+	}
+
+	/**
+	 * Removes the first object matching a given short name from the scene.
+	 * Used for untagged export nodes (e.g. the skycrane's tether wires)
+	 * which sit outside every metadata-typed subtree.
+	 */
+	removeObjectByShortName( name ) {
+		const obj = C4DUtils.getObjectByShortName( this.scene, name );
+		if ( obj ) obj.removeFromParent();
 	}
 
 	/**

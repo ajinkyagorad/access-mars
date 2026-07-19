@@ -43,15 +43,24 @@ const skipVideo = process.argv.includes('--skip-video');
     };
 
     let endedDispatched = false;
+    let introDoneAt = null;
     const t0 = Date.now();
     let last = null;
-    while (Date.now() - t0 < 120000) {
+    while (Date.now() - t0 < 150000) {
         const state = await page.evaluate(probe);
         const key = JSON.stringify(state);
         if (key !== last) { console.log('[qa]', key); last = key; }
 
-        if (state.gates && state.gates.introComplete) {
+        if (state.gates && state.gates.introComplete && !introDoneAt) {
             console.log('[qa] PASS: intro completed, animation playing');
+            introDoneAt = Date.now();
+            // capture the visual state at key moments after the intro
+            const shots = [[1000, 'shot-rover-anim.png'], [12000, 'shot-rover-mid.png'], [25000, 'shot-terrain.png']];
+            for (const [wait, name] of shots) {
+                await new Promise(r => setTimeout(r, wait));
+                await page.screenshot({ path: 'scripts/tmp/' + name });
+                console.log('[qa] screenshot:', name);
+            }
             break;
         }
         // Once assets are loaded, force the video-ended gate if asked

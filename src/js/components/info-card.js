@@ -137,7 +137,7 @@ if ( typeof AFRAME !== 'undefined' && AFRAME ) {
 
 			// Show everything when the 'visible' state is added
 			this.el.addEventListener( 'stateadded', event => {
-				if ( event.detail.state !== 'visible' ) return;
+				if ( event.detail !== 'visible' ) return;
 
 				// Send analytics
 				if ( event.target.id === 'info-card' ) {
@@ -159,7 +159,7 @@ if ( typeof AFRAME !== 'undefined' && AFRAME ) {
 
 			// Hide everything when the 'visible' state is removed
 			this.el.addEventListener( 'stateremoved', event => {
-				if ( event.detail.state !== 'visible' ) return;
+				if ( event.detail !== 'visible' ) return;
 
 				this.el.sceneEl.removeState( 'modal' );
 				this.textHeader.removeState( 'visible' );

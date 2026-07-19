@@ -133,7 +133,7 @@ if ( typeof AFRAME !== 'undefined' && AFRAME ) {
 
 			// Bubble the visible state up to all child entities when it is added to the map card
 			this.mapCard.addEventListener( 'stateadded', event => {
-				if ( event.detail.state !== 'visible' ) return;
+				if ( event.detail !== 'visible' ) return;
 				this.distanceLabel.addState( 'visible' );
 				this.numberLabel.addState( 'visible' );
 				this.siteLabel.addState( 'visible' );
@@ -143,7 +143,7 @@ if ( typeof AFRAME !== 'undefined' && AFRAME ) {
 
 			// Bubble the visible state up to all child entities when it is removed from the map card
 			this.mapCard.addEventListener( 'stateremoved', event => {
-				if ( event.detail.state !== 'visible' ) return;
+				if ( event.detail !== 'visible' ) return;
 				this.distanceLabel.removeState( 'visible' );
 				this.numberLabel.removeState( 'visible' );
 				this.siteLabel.removeState( 'visible' );

@@ -56,12 +56,12 @@ if ( typeof AFRAME !== 'undefined' && AFRAME ) {
 			});
 
 			this.el.sceneEl.addEventListener( 'stateadded', event => {
-				if ( event.detail.state === 'interactive' ) this.isInteractive = true;
+				if ( event.detail === 'interactive' ) this.isInteractive = true;
 				if ( event.target !== this.el.sceneEl ) return;
 			});
 
 			this.el.sceneEl.addEventListener( 'stateremoved', event => {
-				if ( event.detail.state === 'interactive' ) this.isInteractive = false;
+				if ( event.detail === 'interactive' ) this.isInteractive = false;
 				if ( event.target !== this.el.sceneEl ) return;
 			});
 		},

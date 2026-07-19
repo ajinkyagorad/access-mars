@@ -9887,9 +9887,21 @@ var C4DSceneManager = exports.C4DSceneManager = function (_EventEmitter) {
 		key: 'removeObjectsWithType',
 		value: function removeObjectsWithType(type) {
 			this.objectsByType[type].forEach(function (obj) {
-				var mesh = _c4dUtils.C4DUtils.getChildWithType(obj, 'Mesh');
-				obj.remove(mesh);
+				obj.removeFromParent();
 			});
+		}
+
+		/**
+   * Removes the first object matching a given short name from the scene.
+   * Used for untagged export nodes (e.g. the skycrane's tether wires)
+   * which sit outside every metadata-typed subtree.
+   */
+
+	}, {
+		key: 'removeObjectByShortName',
+		value: function removeObjectByShortName(name) {
+			var obj = _c4dUtils.C4DUtils.getObjectByShortName(this.scene, name);
+			if (obj) obj.removeFromParent();
 		}
 
 		/**
@@ -10746,14 +10758,14 @@ if (typeof AFRAME !== 'undefined' && AFRAME) {
 
 									this.el.sceneEl.addEventListener('stateremoved', function (event) {
 												if (event.target !== _this.el.sceneEl) return;
-												if (event.detail.state !== 'interactive') return;
+												if (event.detail !== 'interactive') return;
 
 												_this.mesh.visible = false;
 									});
 
 									this.el.sceneEl.addEventListener('stateadded', function (event) {
 												if (event.target !== _this.el.sceneEl) return;
-												if (event.detail.state !== 'interactive') return;
+												if (event.detail !== 'interactive') return;
 
 												_this.mesh.visible = true;
 									});
@@ -11054,7 +11066,7 @@ if (typeof AFRAME !== 'undefined' && AFRAME) {
 			// Hide the arc whenever the scene is not interactive
 			this.el.sceneEl.addEventListener('stateremoved', function (event) {
 				if (event.target !== _this.el.sceneEl) return;
-				if (event.detail.state === 'interactive') _this.mesh.visible = false;
+				if (event.detail === 'interactive') _this.mesh.visible = false;
 			});
 
 			// event for exiting vr
@@ -11165,12 +11177,12 @@ if (typeof AFRAME !== 'undefined' && AFRAME) {
 			});
 
 			this.el.sceneEl.addEventListener('stateadded', function (event) {
-				if (event.detail.state === 'interactive') _this.isInteractive = true;
+				if (event.detail === 'interactive') _this.isInteractive = true;
 				if (event.target !== _this.el.sceneEl) return;
 			});
 
 			this.el.sceneEl.addEventListener('stateremoved', function (event) {
-				if (event.detail.state === 'interactive') _this.isInteractive = false;
+				if (event.detail === 'interactive') _this.isInteractive = false;
 				if (event.target !== _this.el.sceneEl) return;
 			});
 		},
@@ -11801,13 +11813,13 @@ if (typeof AFRAME !== 'undefined' && AFRAME) {
 			});
 
 			this.el.addEventListener('stateadded', function (event) {
-				if (event.detail.state !== 'visible') return;
+				if (event.detail !== 'visible') return;
 				if (_this.transitionInDelay <= 0) return;
 				_this.delayCounter = 1;
 			});
 
 			this.el.addEventListener('stateremoved', function (event) {
-				if (event.detail.state !== 'visible') return;
+				if (event.detail !== 'visible') return;
 				_this.delayCounter = 0;
 			});
 		},
@@ -12034,7 +12046,7 @@ if (typeof AFRAME !== 'undefined' && AFRAME) {
 
 									// Show everything when the 'visible' state is added
 									this.el.addEventListener('stateadded', function (event) {
-												if (event.detail.state !== 'visible') return;
+												if (event.detail !== 'visible') return;
 
 												// Send analytics
 												if (event.target.id === 'info-card') {
@@ -12055,7 +12067,7 @@ if (typeof AFRAME !== 'undefined' && AFRAME) {
 
 									// Hide everything when the 'visible' state is removed
 									this.el.addEventListener('stateremoved', function (event) {
-												if (event.detail.state !== 'visible') return;
+												if (event.detail !== 'visible') return;
 
 												_this.el.sceneEl.removeState('modal');
 												_this.textHeader.removeState('visible');
@@ -12697,7 +12709,7 @@ if (typeof AFRAME !== 'undefined' && AFRAME) {
 
 			// Reset the delay counter when the 'visible' state is added
 			this.el.addEventListener('stateadded', function (event) {
-				if (event.detail.state !== 'visible') return;
+				if (event.detail !== 'visible') return;
 				_this.delayCounter = 1;
 			});
 		},
@@ -12864,14 +12876,14 @@ if (typeof AFRAME !== 'undefined' && AFRAME) {
 
 									// Show the card when the 'visible' state is added
 									this.el.addEventListener('stateadded', function (event) {
-												if (event.detail.state !== 'visible') return;
+												if (event.detail !== 'visible') return;
 												ga('send', 'event', 'map-card', 'opened', '');
 												_this.onShow();
 									});
 
 									// Dismiss the card when the 'visible' state is removed
 									this.el.addEventListener('stateremoved', function (event) {
-												if (event.detail.state !== 'visible') return;
+												if (event.detail !== 'visible') return;
 												_this.onHide();
 									});
 
@@ -13053,13 +13065,13 @@ if (typeof AFRAME !== 'undefined' && AFRAME) {
 
 			// Add the 'visible' state to the child entities whenever the parent card adds it.
 			this.parentCard.addEventListener('stateadded', function (event) {
-				if (event.detail.state !== 'visible') return;
+				if (event.detail !== 'visible') return;
 				_this.numberLabel.addState('visible');
 			});
 
 			// Remove the 'visible' state to the child entities whenever the parent card removes it.
 			this.parentCard.addEventListener('stateremoved', function (event) {
-				if (event.detail.state !== 'visible') return;
+				if (event.detail !== 'visible') return;
 				_this.numberLabel.removeState('visible');
 			});
 
@@ -13390,7 +13402,7 @@ if (typeof AFRAME !== 'undefined' && AFRAME) {
 
 			// Bubble the visible state up to all child entities when it is added to the map card
 			this.mapCard.addEventListener('stateadded', function (event) {
-				if (event.detail.state !== 'visible') return;
+				if (event.detail !== 'visible') return;
 				_this.distanceLabel.addState('visible');
 				_this.numberLabel.addState('visible');
 				_this.siteLabel.addState('visible');
@@ -13400,7 +13412,7 @@ if (typeof AFRAME !== 'undefined' && AFRAME) {
 
 			// Bubble the visible state up to all child entities when it is removed from the map card
 			this.mapCard.addEventListener('stateremoved', function (event) {
-				if (event.detail.state !== 'visible') return;
+				if (event.detail !== 'visible') return;
 				_this.distanceLabel.removeState('visible');
 				_this.numberLabel.removeState('visible');
 				_this.siteLabel.removeState('visible');
@@ -13618,17 +13630,39 @@ if (typeof AFRAME !== 'undefined' && AFRAME) {
 			this.el.appendChild(this.bodyText);
 
 			this.el.parentNode.addEventListener('stateadded', function (event) {
-				if (event.detail.state === 'visible') _this.onShow();
+				if (event.detail === 'visible') _this.onShow();
 			});
 
 			this.el.parentNode.addEventListener('stateremoved', function (event) {
-				if (event.detail.state === 'visible') _this.onHide();
+				if (event.detail === 'visible') _this.onHide();
 			});
 		},
 
 		update: function update() {
-			var parentWidth = this.el.parentNode.getAttribute('orientation-card').width;
-			var parentHeight = this.el.parentNode.getAttribute('orientation-card').height;
+			var _this2 = this;
+
+			var parentData = this.el.parentNode.getAttribute('orientation-card');
+
+			// If this column's update runs before the parent card's component
+			// has finished initializing, getAttribute() returns the raw
+			// attribute string instead of component data, and every derived
+			// size/position below becomes NaN — permanently breaking the
+			// column's meshes. Defer until the parent component is ready.
+			if (!parentData || typeof parentData.width !== 'number' || typeof parentData.height !== 'number') {
+				if (!this.parentReadyListener) {
+					this.parentReadyListener = function (event) {
+						if (event.detail.name !== 'orientation-card') return;
+						_this2.el.parentNode.removeEventListener('componentinitialized', _this2.parentReadyListener);
+						_this2.parentReadyListener = null;
+						_this2.update();
+					};
+					this.el.parentNode.addEventListener('componentinitialized', this.parentReadyListener);
+				}
+				return;
+			}
+
+			var parentWidth = parentData.width;
+			var parentHeight = parentData.height;
 
 			var startX = parentWidth / -2;
 			var columnWidth = parentWidth / 3;
@@ -13809,14 +13843,14 @@ if (typeof AFRAME !== 'undefined' && AFRAME) {
 
 									// Show the card when the 'visible' state is added
 									this.el.addEventListener('stateadded', function (event) {
-												if (event.detail.state !== 'visible') return;
+												if (event.detail !== 'visible') return;
 												ga('send', 'event', 'orientation-card', 'opened', '');
 												_this.onShow();
 									});
 
 									// Dismiss the card when the 'visible' state is removed
 									this.el.addEventListener('stateremoved', function (event) {
-												if (event.detail.state !== 'visible') return;
+												if (event.detail !== 'visible') return;
 												_this.onHide();
 									});
 
@@ -14197,7 +14231,7 @@ if (typeof AFRAME !== 'undefined' && AFRAME) {
 
 			// Offset the ring's "timeline" by the delay constant
 			this.el.addEventListener('stateadded', function (event) {
-				if (event.detail.state !== 'visible') return;
+				if (event.detail !== 'visible') return;
 				_this.reset();
 			});
 		},
@@ -14328,11 +14362,11 @@ if (typeof AFRAME !== 'undefined' && AFRAME) {
 			});
 
 			this.el.addEventListener('stateadded', function (event) {
-				if (event.detail.state === 'visible') {
+				if (event.detail === 'visible') {
 					_this.reset();
 				}
 
-				if (event.detail.state === 'hover') {
+				if (event.detail === 'hover') {
 					_this.initialRot = _this.iconObject.quaternion;
 				}
 			});
@@ -14749,11 +14783,11 @@ if (typeof AFRAME !== 'undefined' && AFRAME) {
 
 				// Listen for the animate state and begin playback
 				_this.el.addEventListener('stateadded', function (event) {
-					if (event.detail.state === 'animate') {
+					if (event.detail === 'animate') {
 						_this.startAnimation();
 					}
 
-					if (event.detail.state === 'complete') {
+					if (event.detail === 'complete') {
 						_this.jumpToEndAnimation();
 					}
 				});
@@ -14837,6 +14871,11 @@ if (typeof AFRAME !== 'undefined' && AFRAME) {
 			this.scene.removeObjectsWithType('LINES');
 			this.scene.removeObjectsWithType('SKYCRANE');
 			this.scene.removeObjectsWithType('IMAGEPLANE');
+
+			// The skycrane's tether wires are untagged in the C4D export and
+			// sit next to the SKYCRANE node, not inside it — remove them by
+			// name so nothing is left hanging in the sky after landing.
+			this.scene.removeObjectByShortName('wires');
 
 			this.el.removeState('animate');
 			this.el.emit('complete', null, false);
@@ -15321,12 +15360,12 @@ if (typeof AFRAME !== 'undefined' && AFRAME) {
 			// Listen for stateremoved event for showing the collision or terrain meshes
 			this.el.addEventListener('stateadded', function (event) {
 
-				if (event.detail.state === 'show-simple') {
+				if (event.detail === 'show-simple') {
 					_this.isSimpleVisible = true;
 					if (_this.collision) _this.collision.setVisible(_this.isSimpleVisible);
 				}
 
-				if (event.detail.state === 'show-terrain') {
+				if (event.detail === 'show-terrain') {
 					_this.isTerrainVisible = true;
 					_this.setVisible(_this.isTerrainVisible);
 				}
@@ -15335,12 +15374,12 @@ if (typeof AFRAME !== 'undefined' && AFRAME) {
 			// Listen for stateremoved event for hiding the collision or terrain meshes
 			this.el.addEventListener('stateremoved', function (event) {
 
-				if (event.detail.state === 'show-simple') {
+				if (event.detail === 'show-simple') {
 					_this.isSimpleVisible = false;
 					if (_this.collision) _this.collision.setVisible(_this.isSimpleVisible);
 				}
 
-				if (event.detail.state === 'show-terrain') {
+				if (event.detail === 'show-terrain') {
 					_this.isTerrainVisible = false;
 					_this.setVisible(_this.isTerrainVisible);
 				}
@@ -16435,14 +16474,14 @@ var StaticScene = function (_EventEmitter) {
 			// Play a sound when opening a modal window
 			this.scene.addEventListener('stateadded', function (event) {
 				if (event.target !== _this2.scene) return;
-				if (event.detail.state !== 'modal') return;
+				if (event.detail !== 'modal') return;
 				_audioManager.AudioManager.playSFX('ui-click');
 			});
 
 			// Play a sound when closing a modal window
 			this.scene.addEventListener('stateremoved', function (event) {
 				if (event.target !== _this2.scene) return;
-				if (event.detail.state !== 'modal') return;
+				if (event.detail !== 'modal') return;
 				_audioManager.AudioManager.playSFX('ui-close');
 			});
 

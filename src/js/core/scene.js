@@ -136,14 +136,14 @@ class StaticScene extends EventEmitter {
 		// Play a sound when opening a modal window
 		this.scene.addEventListener( 'stateadded', event => {
 			if ( event.target !== this.scene ) return;
-			if ( event.detail.state !== 'modal' ) return;
+			if ( event.detail !== 'modal' ) return;
 			AudioManager.playSFX( 'ui-click' );
 		});
 
 		// Play a sound when closing a modal window
 		this.scene.addEventListener( 'stateremoved', event => {
 			if ( event.target !== this.scene ) return;
-			if ( event.detail.state !== 'modal' ) return;
+			if ( event.detail !== 'modal' ) return;
 			AudioManager.playSFX( 'ui-close' );
 		});
 

@@ -66,11 +66,11 @@ if ( typeof AFRAME !== 'undefined' && AFRAME ) {
 			});
 
 			this.el.addEventListener( 'stateadded', event => {
-				if ( event.detail.state === 'visible' ) {
+				if ( event.detail === 'visible' ) {
 					this.reset();
 				}
 
-				if ( event.detail.state === 'hover' ) {
+				if ( event.detail === 'hover' ) {
 					this.initialRot = this.iconObject.quaternion;
 				}
 			});
