@@ -116,7 +116,7 @@ if ( typeof AFRAME !== 'undefined' && AFRAME ) {
 				// Set the pole and spin widget as visible only when they're within the camera's view frustum.
 				// This allows the transition animation to play out so the user can see the POIs being added.
 				const onFrustumUpdated = event => {
-					if ( event.detail.frustum.containsPoint( this.el.object3D.getWorldPosition() ) ) {
+					if ( event.detail.frustum.containsPoint( this.el.object3D.getWorldPosition( new THREE.Vector3() ) ) ) {
 						this.pole.addState( 'visible' );
 						this.spinWidget.addState( 'visible' );
 						this.camera.removeEventListener( 'frustum-updated', onFrustumUpdated );

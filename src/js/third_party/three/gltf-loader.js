@@ -4858,6 +4858,8 @@ function addPrimitiveAttributes( geometry, primitiveDef, parser ) {
  * @property {Object} userData - Additional data.
  **/
 
-;
+// Attach to the global THREE namespace (matches the pre-module three.js
+// examples layout that the rest of this codebase was written against).
+THREE.GLTFLoader = GLTFLoader;
 
 })();

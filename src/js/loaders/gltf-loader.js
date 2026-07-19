@@ -32,6 +32,11 @@ class StaticGLTFLoader extends EventEmitter {
 
 		if ( !this.gltfLoader ) {
 			this.gltfLoader = new THREE.GLTFLoader();
+
+			// Terrain, rover and map models use Draco compression.
+			const dracoLoader = new THREE.DRACOLoader();
+			dracoLoader.setDecoderPath( 'third_party/draco/' );
+			this.gltfLoader.setDRACOLoader( dracoLoader );
 		}
 
 		return new Promise( ( resolve, reject ) => {

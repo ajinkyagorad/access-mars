@@ -52,7 +52,7 @@ if ( typeof AFRAME !== 'undefined' && AFRAME ) {
 
 		tick: function( t, dt ) {
 			if ( !this.el.object3D ) return;
-			if ( !this.target.object3D ) return;
+			if ( !this.target || !this.target.object3D ) return;
 			if ( !this.data.alwaysUpdate && !this.needsUpdate ) return;
 
 			if ( this.data.axis === 'y' ) {
@@ -70,7 +70,7 @@ if ( typeof AFRAME !== 'undefined' && AFRAME ) {
 				this.el.object3D.setRotationFromEuler( this.euler );
 				
 			} else {
-				this.el.object3D.lookAt( this.target.object3D.getWorldPosition() );
+				this.el.object3D.lookAt( this.target.object3D.getWorldPosition( this.lookAtTargetVector ) );
 			}
 
 			this.updateTimer = Math.max( 0, this.updateTimer - ( dt / 1000 ) );

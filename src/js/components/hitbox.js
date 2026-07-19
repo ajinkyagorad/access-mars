@@ -86,9 +86,9 @@ if ( typeof AFRAME !== 'undefined' && AFRAME ) {
 		updateHitboxMesh: function() {
 			if ( !this.bounds ) return;
 			this.mesh = new THREE.Mesh( HITBOX_GEOMETRY, HITBOX_MATERIAL );
-			this.mesh.position.copy( this.bounds.getCenter() );
+			this.mesh.position.copy( this.bounds.getCenter( new THREE.Vector3() ) );
 			this.mesh.position.setZ( this.mesh.position.z + 0.02 );
-			this.mesh.scale.copy( this.bounds.getSize() );
+			this.mesh.scale.copy( this.bounds.getSize( new THREE.Vector3() ) );
 			this.mesh.scale.setZ( 1 );
 
 			this.el.setObject3D( 'mesh', this.mesh );

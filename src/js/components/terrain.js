@@ -291,7 +291,7 @@ class TileMesh {
 		// closer tiles load their higher-resolution textures first.
 		this.box = new THREE.Box3();
 		this.box.setFromObject( this.mesh );
-		this.center = this.box.getCenter();
+		this.center = this.box.getCenter( new THREE.Vector3() );
 
 		this.textureLoader = new THREE.TextureLoader();
 		this.texturesBySize = {};

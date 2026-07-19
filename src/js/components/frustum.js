@@ -38,9 +38,13 @@ if ( typeof AFRAME !== 'undefined' && AFRAME ) {
 
 			if ( !this.camera ) return;
 
-			this.camera.matrixWorldInverse.getInverse( this.camera.matrixWorld );
+			// Matrix4.getInverse() was removed in three.js r123+;
+			// use copy().invert() instead.
+			this.camera.matrixWorldInverse.copy( this.camera.matrixWorld ).invert();
 			this.matrix.multiplyMatrices( this.camera.projectionMatrix, this.camera.matrixWorldInverse );
-			this.frustum.setFromMatrix( this.matrix );
+			// Frustum.setFromMatrix() was removed in newer three.js;
+			// setFromProjectionMatrix() is the replacement.
+			this.frustum.setFromProjectionMatrix( this.matrix );
 
 			this.el.emit( 'frustum-updated', { frustum: this.frustum }, false );
 		}

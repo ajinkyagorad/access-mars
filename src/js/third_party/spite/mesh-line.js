@@ -375,7 +375,9 @@ function MeshLineMaterial( parameters ) {
 		return v;
 	}
 
-	THREE.Material.call( this );
+	// NOTE: this factory returns the THREE.RawShaderMaterial created below.
+	// THREE.Material.call( this ) was removed — native ES6 classes (three.js
+	// r125+) cannot be invoked via .call().
 
 	parameters = parameters || {};
 

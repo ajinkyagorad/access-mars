@@ -1418,6 +1418,23 @@ function toCreasedNormals( geometry, creaseAngle = Math.PI / 3 /* 60 degrees */ 
 
 }
 
-;
+// Attach the public API to the global THREE namespace so that
+// gltf-loader.js (and any other legacy script) can access it as
+// THREE.BufferGeometryUtils, matching the upstream three.js examples/jsm layout.
+THREE.BufferGeometryUtils = {
+	computeMikkTSpaceTangents: computeMikkTSpaceTangents,
+	mergeGeometries: mergeGeometries,
+	mergeAttributes: mergeAttributes,
+	deepCloneAttribute: deepCloneAttribute,
+	interleaveAttributes: interleaveAttributes,
+	deinterleaveAttribute: deinterleaveAttribute,
+	deinterleaveGeometry: deinterleaveGeometry,
+	estimateBytesUsed: estimateBytesUsed,
+	mergeVertices: mergeVertices,
+	toTrianglesDrawMode: toTrianglesDrawMode,
+	computeMorphedAttributes: computeMorphedAttributes,
+	mergeGroups: mergeGroups,
+	toCreasedNormals: toCreasedNormals
+};
 
 })();

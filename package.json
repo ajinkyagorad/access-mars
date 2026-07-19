@@ -55,6 +55,9 @@
           ],
           "plugins": [
             "transform-object-rest-spread"
+          ],
+          "ignore": [
+            "**/third_party/three/**"
           ]
         }
       ]

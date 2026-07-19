@@ -184,7 +184,7 @@ if ( typeof AFRAME !== 'undefined' && AFRAME ) {
 			this.offsetDummy.setAttribute( 'position', { x: 0, y: yOffset, z: 0 } );
 
 			// Update position and look-at rotation to match the current camera location
-			const uiPosition = this.positionDummy.object3D.getWorldPosition();
+			const uiPosition = this.positionDummy.object3D.getWorldPosition( new THREE.Vector3() );
 			this.el.setAttribute( 'position', { x: uiPosition.x, y: uiPosition.y, z: uiPosition.z } );
 			this.el.components[ 'look-at-target' ].update();
 

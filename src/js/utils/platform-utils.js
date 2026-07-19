@@ -44,8 +44,10 @@ class StaticPlatformUtils {
      * Checks the aspect ratio and userAgent for confirmation.
      */
     isTablet() {
-    	// VR/XR headsets (Quest, Rift, Vive, etc.) should never be classified as tablets
-    	if ( navigator.xr || /(Oculus|Rift|Vive|Index|MixedReality)/.test( navigator.userAgent ) ) {
+    	// Dedicated VR/XR headsets (Quest, Rift, Vive, etc.) must never be
+    	// classified as tablets — their display aspect ratio would otherwise
+    	// match the near-square heuristic below and block VR mode.
+    	if ( /(Oculus|Quest|Rift|Vive|Valve|Index|MixedReality|HoloLens|Vision\s*Pro)/i.test( navigator.userAgent ) ) {
     		return false;
     	}
     	return Math.max( window.screen.width, window.screen.height ) / Math.min( window.screen.width, window.screen.height ) < 1.35 &&

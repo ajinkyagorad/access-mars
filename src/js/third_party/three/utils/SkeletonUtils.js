@@ -490,6 +490,17 @@ function parallelTraverse( a, b, callback ) {
  * @property {Vector3} [hipPosition] - An additional position offset applied to the hip bone.
  **/
 
-;
+// Attach the public API to the global THREE namespace so that
+// gltf-loader.js (and any other legacy script) can access it as
+// THREE.SkeletonUtils, matching the upstream three.js examples/jsm layout.
+THREE.SkeletonUtils = {
+	retarget: retarget,
+	retargetClip: retargetClip,
+	clone: clone,
+	getBoneByName: getBoneByName,
+	getBones: getBones,
+	getHelperFromSkeleton: getHelperFromSkeleton,
+	parallelTraverse: parallelTraverse
+};
 
 })();

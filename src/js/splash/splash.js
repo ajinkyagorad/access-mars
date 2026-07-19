@@ -46,24 +46,34 @@ export function initSplash() {
 	// scene loaded is automatically resolved after a setTimeout
 	const aSceneLoaded = new Promise( resolve => setTimeout( () => resolve() ) );
 
+    // One single enter button. It is inserted immediately in 360 mode so the
+    // UI never depends on asynchronous XR detection, and is upgraded to
+    // ENTER VR only when immersive-vr sessions are confirmed to work.
     const enterVR = document.createElement( 'button' );
     enterVR.classList.add( 'webvr-ui-button' );
-    enterVR.innerHTML = '<div class="webvr-ui-title" style="display: initial;">ENTER 360</div>';
 
-    // create the Enter 360 Button that is full-size and replaces Enter VR
-    function createEnter360Button() {
-        enterVRContainer.innerHTML = '';
-        const enter360 = document.createElement( 'button' );
-        enter360.classList.add( 'webvr-ui-button' );
-        enter360.innerHTML = '<div class="webvr-ui-title" style="padding: 0;">LOADING</div>';
-        enterVRContainer.appendChild( enter360 );
-        enter360.addEventListener( 'click', () => {
+    // Configure the button for flat / 360 mode (always available).
+    function setButton360() {
+        enterVR.innerHTML = '<div class="webvr-ui-title mode360" style="display: initial;">' + SVG_360 + '<span>ENTER 360</span></div>';
+        enterVR.onclick = () => {
             playVideo();
             hideSplash();
             onEnter360();
-        });
+        };
+        // 360 is the primary mode here, so the secondary link is redundant
         tryItIn360.style.display = 'none';
-        return enter360;
+    }
+
+    // Configure the button for immersive VR (WebXR) mode.
+    function setButtonVR() {
+        enterVR.innerHTML = '<div class="webvr-ui-title" style="display: initial;">ENTER VR</div>';
+        enterVR.onclick = () => {
+            playVideo();
+            hideSplash();
+            onEnterVR();
+        };
+        // offer flat mode as a secondary option under the VR button
+        tryItIn360.style.display = 'inline-block';
     }
 
 	function hideSplash() {
@@ -78,7 +88,7 @@ export function initSplash() {
         const name = ( PlatformUtils.isMp4Supported() ) ? 'intro-video-mp4' : 'intro-video-webm';
         const el = document.getElementById( name );
 		if ( el ) el.play();
-    }
+	}
 
 	// this can happen by "Enter 360" or "Try it in 360"
 	function onEnter360() {
@@ -89,37 +99,47 @@ export function initSplash() {
 
     function onEnterVR() {
 		aScene.play();
-        aScene.enterVR();
         sceneEntered( 'vr' );
+        try {
+            // In A-Frame 1.x this delegates to navigator.xr.requestSession()
+            const result = aScene.enterVR();
+            if ( result && typeof result.catch === 'function' ) {
+                result.catch( err => {
+                    console.error( 'immersive-vr session request failed:', err );
+                    showSplash();
+                });
+            }
+        } catch ( err ) {
+            console.error( 'immersive-vr session request failed:', err );
+            showSplash();
+        }
 	}
 
-    if( PlatformUtils.isTablet() ){
-        createEnter360Button();
-    }
-
-	// Check WebXR support to determine VR availability
+    // Check WebXR immersive-vr support. Never throws — resolves false on
+    // any error so the 360 fallback always stays available.
 	function checkWebXRSupport() {
-		if ( navigator.xr ) {
-			return navigator.xr.isSessionSupported( 'immersive-vr' );
-		}
+        try {
+			if ( navigator.xr && typeof navigator.xr.isSessionSupported === 'function' ) {
+				return navigator.xr.isSessionSupported( 'immersive-vr' );
+			}
+        } catch ( err ) {
+            console.warn( 'WebXR support check failed:', err );
+        }
 		return Promise.resolve( false );
 	}
 
-	// Insert the VR button (shows "LOADING" until we know support)
-	if ( !PlatformUtils.isTablet() ) {
-		enterVRContainer.insertBefore( enterVR, enterVRContainer.firstChild );
-	}
+    // Insert the button right away in the always-available 360 mode.
+    enterVRContainer.insertBefore( enterVR, enterVRContainer.firstChild );
+    setButton360();
 
-	// Attach click handler for VR entry
-	enterVR.addEventListener( 'click', () => {
-		playVideo();
-		enterVR.innerHTML = '<div class="webvr-ui-title" style="display: initial;">WAITING</div>';
-	}, true);
-
-    function tryToMakeFullScreen() {
-        if (screenfull.enabled) {
-            screenfull.request();
-        }
+    // Upgrade to ENTER VR only on non-tablet devices where immersive-vr
+    // sessions are actually supported (e.g. the Meta Quest browser).
+    if ( !PlatformUtils.isTablet() ) {
+        checkWebXRSupport().then( supported => {
+            if ( supported ) setButtonVR();
+        }).catch( err => {
+            console.warn( 'WebXR support check failed:', err );
+        });
     }
 
     aSceneLoaded
@@ -132,48 +152,18 @@ export function initSplash() {
 
 			// add the loaded events
             tryItIn360.addEventListener( 'click', () => {
-                // tryToMakeFullScreen();
                 playVideo();
                 hideSplash();
                 onEnter360();
             });
 		})
 
-        // change text to "Enter **"
+        // mark the enter button container as ready
         .then(()=>{
-			// audio and everything is loaded now
 			enterVRContainer.classList.add( 'ready' );
-			const always = () => {
-                // if WebXR is available and its not polyfill on a tablet
-                if ( vrSupported && !( PlatformUtils.isMobile() && PlatformUtils.isTablet())) {
-                    enterVR.innerHTML = '<div class="webvr-ui-title" style="display: initial;">ENTER VR</div>';
-					enterVR.onclick = () => {
-						playVideo();
-						hideSplash();
-						onEnterVR();
-					};
-                } else if (PlatformUtils.isTablet() || !vrSupported) {
-                    document.querySelector( '.webvr-ui-title' ).innerHTML = SVG_360 + '<span>ENTER 360</span>';
-                    document.querySelector( '.webvr-ui-title' ).classList.add( 'mode360' );
-                }
-            };
-			var vrSupported = false;
-            return checkWebXRSupport()
-                .then( function( supported ) {
-					vrSupported = supported;
-					if ( !supported && !PlatformUtils.isTablet() ) {
-						// VR not available on non-tablet — show 360 fallback
-						enterVRContainer.innerHTML = '';
-						createEnter360Button();
-					}
-				}, always )
-				.then( always );
 		})
         .catch(function(err) {
-            console.error('XR detection failed, showing ENTER 360 fallback:', err);
-            // Fallback: ensure the ENTER 360 button is visible even if XR detection fails
-            enterVR.innerHTML = '<div class="webvr-ui-title" style="display: initial;">ENTER 360</div>';
-            enterVRContainer.style.display = '';
+            console.error('Splash init error:', err);
         });
 
     function sceneEntered( modeType ) {

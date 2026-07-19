@@ -198,11 +198,21 @@ class StaticScene extends EventEmitter {
 		];
 
 		const righthandEl = document.getElementById( 'right-hand' );
-		controllers.forEach( controller => {
-			if ( info.indexOf( controller.label ) >= 0 ) {
-				righthandEl.setAttribute( controller.attribute, 'hand', 'right' );
-			}
-		});
+
+		if ( info === 'webxr' ) {
+			// WebXR headsets (Meta Quest, etc.). oculus-touch-controls injects
+			// tracked-controls internally, drives the entity pose from the
+			// XRInputSource, and emits the button events that better-raycaster
+			// listens for. The controller model is disabled because the app
+			// renders its own controller-ray visual.
+			righthandEl.setAttribute( 'oculus-touch-controls', 'hand: right; model: false' );
+		} else {
+			controllers.forEach( controller => {
+				if ( info.indexOf( controller.label ) >= 0 ) {
+					righthandEl.setAttribute( controller.attribute, 'hand', 'right' );
+				}
+			});
+		}
 
 		// checks visibility of controls
 		this.emit( 'on-controls-ready' );
