@@ -58,11 +58,13 @@ if ( typeof AFRAME !== 'undefined' && AFRAME ) {
 			this.isIntersected = false;
 			this.targetMaterials = [];
 
-			// The POI's hitbox is added thru a mesh-added event which 
+			// The POI's hitbox is added thru a mesh-added event which
 			// passes in the relevant hitbox mesh from the rover scene.
 			this.el.addEventListener( 'mesh-added', event => {
 				this.metadata = event.detail.metadata;
-				this.mesh = event.detail.children[ 0 ];
+				// three.js r184 collapses single-mesh nodes: the node may BE
+				// the Mesh rather than a Group containing one as children[0].
+				this.mesh = ( event.detail.type === 'Mesh' ) ? event.detail : event.detail.children[ 0 ];
 				this.mesh.material.visible = false;
 
 				this.el.setObject3D( 'mesh', this.mesh );

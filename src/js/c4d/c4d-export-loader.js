@@ -43,9 +43,23 @@ export class C4DExportLoader {
 			GLTFLoader.load( src ).then( data => {
 
 				var promises = [];
+				const parser = data.gltf.parser;
+				const jsonNodes = ( parser && parser.json ) ? parser.json.nodes : null;
 
 				data.gltf.scene.traverse( node => {
 					if ( node.name.length === 0 ) node.name = node.uuid;
+
+					// three.js r184 deduplicates node names (foo -> foo_1),
+					// which corrupts the C4D metadata encoded in node names
+					// (e.g. XREF_wheel became XREF_wheel_1 -> 404). Recover
+					// the original glTF node name via parser associations.
+					if ( parser && jsonNodes && parser.associations && parser.associations.has( node ) ) {
+						const nodeIndex = parser.associations.get( node ).nodes;
+						if ( nodeIndex !== undefined && jsonNodes[ nodeIndex ] && jsonNodes[ nodeIndex ].name ) {
+							node.userData.c4dOriginalName = jsonNodes[ nodeIndex ].name;
+						}
+					}
+
 					promises.push( new C4DMetadata( xrefPath, texPath ).parse( node ) );
 				});
 

@@ -18,6 +18,7 @@ import { C4DUtils } from '../c4d/c4d-utils';
 import { C4DExportLoader } from '../c4d/c4d-export-loader';
 import { JPEGWorker } from '../workers/jpeg-worker';
 import { MathUtils } from '../utils/math-utils';
+import '../third_party/bompo/progressive-texture';
 
 const TerrainShader = require( '../shaders/terrain-shader' );
 const EdgeShader = require( '../shaders/edge-shader' );
@@ -136,26 +137,38 @@ if ( typeof AFRAME !== 'undefined' && AFRAME ) {
 
 					// Loop through each node in the scene and separate out the tiles
 					// from the background and collision meshes.
+					//
+					// IMPORTANT: collect the nodes first, then build the wrappers.
+					// three.js r184 collapses single-mesh nodes, so SimpleTerrain /
+					// BackgroundTerrain reparent the node itself out of the scene
+					// graph (via setObject3D). Doing that while traverse() is
+					// iterating the same children array splices it mid-loop and
+					// crashes the traversal with undefined children.
+					const simpleNodes = [];
+					const backgroundNodes = [];
+					const tileNodes = [];
 					this.terrain.traverse( node => {
 						if ( !node.metadata ) return;
 
-						if ( node.metadata.type === 'SIMPLE' ) {
-							this.collision = new SimpleTerrain( node );
-							this.collision.setVisible( this.isSimpleVisible );
-							return;
-						}
+						if ( node.metadata.type === 'SIMPLE' ) { simpleNodes.push( node ); return; }
+						if ( node.metadata.type === 'BACKGROUND' ) { backgroundNodes.push( node ); return; }
+						if ( node.metadata.type === 'TILE' ) { tileNodes.push( node ); }
+					});
 
-						if ( node.metadata.type === 'BACKGROUND' ) {
-							this.background = new BackgroundTerrain( node );
-							this.background.setVisible( this.isTerrainVisible );
-							return;
-						}
+					simpleNodes.forEach( node => {
+						this.collision = new SimpleTerrain( node );
+						this.collision.setVisible( this.isSimpleVisible );
+					});
 
-						if ( node.metadata.type === 'TILE' ) {
-							var mesh = new TileMesh( node );
-							this.tileMeshes.push( mesh );
-							this.tileMeshesByID[ mesh.id ] = mesh;
-						}
+					backgroundNodes.forEach( node => {
+						this.background = new BackgroundTerrain( node );
+						this.background.setVisible( this.isTerrainVisible );
+					});
+
+					tileNodes.forEach( node => {
+						var mesh = new TileMesh( node );
+						this.tileMeshes.push( mesh );
+						this.tileMeshesByID[ mesh.id ] = mesh;
 					});
 
 					// Set up the simplified collision mesh
@@ -284,7 +297,7 @@ class TileMesh {
 		this.animIn = 0;
 
 		// Remove unused color geometry attribute
-		this.mesh.geometry.removeAttribute( 'color' );
+		this.mesh.geometry.deleteAttribute( 'color' );
 
 		// Get the center coordinate of the tile by calculating the tile's bounding box.
 		// The center coordinate is used to sort tiles by distance from the player so that
@@ -557,7 +570,7 @@ class BackgroundTerrain {
 		this.visible = false;
 
 		// Remove unused color geometry attribute
-		this.mesh.geometry.removeAttribute( 'color' );
+		this.mesh.geometry.deleteAttribute( 'color' );
 	}
 
 	loadTexture() {
@@ -638,12 +651,11 @@ class SimpleTerrain {
 	}
 
 	setupMesh() {
-		var terrainGeometry = this.mesh.geometry;
-
 		// Merge duplicate vertices left over from the mesh simplification process.
-		// In Three.js r125+, BufferGeometry.mergeVertices() replaces the old
-		// Geometry.fromBufferGeometry() / BufferGeometry.fromGeometry() round-trip.
-		terrainGeometry.mergeVertices();
+		// mergeVertices lives in BufferGeometryUtils (never was a BufferGeometry
+		// method) and returns a NEW geometry, so it must be reassigned.
+		var terrainGeometry = THREE.BufferGeometryUtils.mergeVertices( this.mesh.geometry );
+		this.mesh.geometry = terrainGeometry;
 
 		// Generate barycentric coordinates for each triangle vertex. This is used by the edge-shader
 		// to generate a wireframe effect.
@@ -659,8 +671,8 @@ class SimpleTerrain {
 		terrainGeometry.setAttribute( 'center', new THREE.BufferAttribute( centers, 3 ) );
 
 		// Remove unused geometry attributes
-		terrainGeometry.removeAttribute( 'uv' );
-		terrainGeometry.removeAttribute( 'color' );
+		terrainGeometry.deleteAttribute( 'uv' );
+		terrainGeometry.deleteAttribute( 'color' );
 
 		this.material = new THREE.ShaderMaterial({
 			uniforms: EdgeShader.uniforms,

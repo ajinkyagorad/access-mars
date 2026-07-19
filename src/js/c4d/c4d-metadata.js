@@ -77,13 +77,16 @@ export class C4DMetadata {
 	 */
 	parse( obj ) {
 		return new Promise( ( resolve, reject ) => {
-			if ( !obj.name.includes( METADATA_TAG ) ) { resolve( null ); return; }
+			// Prefer the original glTF node name: three.js r184 deduplicates
+			// Object3D names (foo -> foo_1), which corrupts encoded metadata.
+			const rawName = obj.userData.c4dOriginalName || obj.name;
+			if ( !rawName.includes( METADATA_TAG ) ) { resolve( null ); return; }
 
 			this.obj = obj;
 			this.mesh = C4DUtils.getChildWithType( this.obj, 'Mesh' );
 			this.material = null;
 
-			this.obj.metadata = GetMetadataFromName( this.obj.name );
+			this.obj.metadata = GetMetadataFromName( rawName );
 			this.obj.metadata.object = this.obj;
 			this.obj.metadata.mesh = this.mesh;
 
@@ -109,14 +112,17 @@ export class C4DMetadata {
 	handleTextureDatum() {
 		return new Promise( ( resolve, reject ) => {
 			if ( !this.obj.metadata.texture ) { resolve(); return; }
-			
+
 			const src = this.texPath + this.obj.metadata.texture;
 			const texLoader = new THREE.TextureLoader();
 
 			this.obj.metadata.texture = texLoader.load( src, texture => {
 				resolve();
 			}, progress => {}, error => {
-				reject( error );
+				// Non-fatal: a missing texture must not hang the whole scene load.
+				console.warn( 'C4DMetadata: texture failed to load:', src, error );
+				this.obj.metadata.texture = null;
+				resolve();
 			});
 		});
 	}
@@ -135,7 +141,10 @@ export class C4DMetadata {
 			this.obj.metadata.highlightMap = texLoader.load( src, texture => {
 				resolve();
 			}, progress => {}, error => {
-				reject( error );
+				// Non-fatal: a missing texture must not hang the whole scene load.
+				console.warn( 'C4DMetadata: highlight map failed to load:', src, error );
+				this.obj.metadata.highlightMap = null;
+				resolve();
 			});
 		});
 	}
@@ -154,6 +163,10 @@ export class C4DMetadata {
 			xrefLoader.load( src, this.xrefPath, this.texPath ).then( response => {
 				response.scene.scale.copy( new THREE.Vector3( 100, 100, 100 ) );
 				this.obj.add( response.scene );
+				resolve();
+			}).catch( error => {
+				// Non-fatal: a missing xref must not hang the whole scene load.
+				console.warn( 'C4DMetadata: xref failed to load:', src, error );
 				resolve();
 			});
 		});

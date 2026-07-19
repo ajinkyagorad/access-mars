@@ -202,6 +202,14 @@ if ( typeof AFRAME !== 'undefined' && AFRAME ) {
 			var controller = document.getElementById( 'right-hand' );
 			controller.addEventListener( 'buttonchanged', this.onControllerChangedRef );
 
+			// Belt and braces: also listen for the semantic trigger events
+			// emitted by oculus-touch-controls (WebXR path), in case
+			// buttonchanged is not delivered on a given runtime.
+			this.onTriggerDownRef = this.onControllerDown.bind(this);
+			this.onTriggerUpRef = this.onControllerUp.bind(this);
+			controller.addEventListener( 'triggerdown', this.onTriggerDownRef );
+			controller.addEventListener( 'triggerup', this.onTriggerUpRef );
+
 			this.onTouchRef = this.onTouch.bind(this);
 
 			if ( AFRAME.utils.device.isMobile() ) {
@@ -213,6 +221,8 @@ if ( typeof AFRAME !== 'undefined' && AFRAME ) {
 		tryRemovingControllerListeners: function() {
 			var controller = document.getElementById( 'right-hand' );
 			controller.removeEventListener( 'buttonchanged', this.onControllerChangedRef );
+			controller.removeEventListener( 'triggerdown', this.onTriggerDownRef );
+			controller.removeEventListener( 'triggerup', this.onTriggerUpRef );
 
 			if ( AFRAME.utils.device.isMobile() ) {
 				this.el.sceneEl.removeEventListener( 'touchstart', this.onTouchRef );
@@ -273,10 +283,14 @@ if ( typeof AFRAME !== 'undefined' && AFRAME ) {
 				return;
 			};
 
-			requestAnimationFrame( () => {
+			// NOTE: window.requestAnimationFrame does NOT fire while an
+			// immersive WebXR session is presenting (only the XRSession rAF
+			// does), which froze the hold-to-skip timer on Quest. Timers
+			// still run, so use setTimeout instead.
+			setTimeout( () => {
 				if( !this.isControllerPressed ) return;
 				this.timeCheck();
-			});
+			}, 16 );
 		}
 	});
 }

@@ -37,7 +37,9 @@ export const FogParamsFrag = [
 ].join( '\n' );
 
 // Fog fragment shader calculations
+// NOTE: saturate() is a three.js ShaderChunk macro (common chunk) which is not
+// included in the project's custom shaders; use clamp() directly instead.
 export const FogFrag = [
-	'float fogFactor = 1.0 - saturate( exp2( -fogDensity * fogDensity * fogDepth * fogDepth * LOG2 ) );',
+	'float fogFactor = 1.0 - clamp( exp2( -fogDensity * fogDensity * fogDepth * fogDepth * LOG2 ), 0.0, 1.0 );',
 	'gl_FragColor.rgb = mix( gl_FragColor.rgb, fogColor, fogFactor );'
 ].join( '\n' );

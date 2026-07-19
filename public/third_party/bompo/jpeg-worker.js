@@ -1,34 +1,45 @@
 /**
  * jpeg-worker
  *
- * Web worker for translating decoded jpeg data into an ArrayBuffer
- * Used for loading ProgressiveTextures.
+ * Web worker for decoding JPEG data into raw RGB pixels.
+ * Used for loading ProgressiveTextures (high-resolution terrain tiles)
+ * off the render thread.
  *
- * Modified from https://github.com/bompo/streamingtextures/blob/master/worker_jpgd.js
+ * The original 2017 version decoded via a bundled asm.js JPEG library
+ * (djpeg.js); it is replaced here with createImageBitmap, which is
+ * available in workers on all modern browsers (including the Meta
+ * Quest browser), faster, and dependency-free.
+ *
+ * Input message:  { data: ArrayBuffer (JPEG bytes), size: int }
+ * Output message: Uint8Array of size*size*3 RGB pixels
+ *                 (or { error: string } on failure)
  */
-
-importScripts( './djpeg.js' );
 
 onmessage = function( event ) {
 
-	var data = readJpeg( event.data.data );
-    var s = event.data.size;
+	const jpegBytes = event.data.data;
+	const size = event.data.size;
 
-	var b = new ArrayBuffer( s * s * 3 );
-    var v1 = new Uint8Array( b );
-    
-    var i = 0,
-        j = 18; // 18-byte header
+	const blob = new Blob( [ jpegBytes ], { type: 'image/jpeg' } );
 
-    while ( i < s * s * 3 && j < ( s * s * 3 ) + 18 ) {
-        v1[ i + 0 ] = data[ j + 2 ]; // R
-        v1[ i + 1 ] = data[ j + 1 ]; // G
-        v1[ i + 2 ] = data[ j + 0 ]; // B
+	createImageBitmap( blob ).then( bitmap => {
+		const canvas = new OffscreenCanvas( size, size );
+		const ctx = canvas.getContext( '2d' );
+		ctx.drawImage( bitmap, 0, 0, size, size );
+		bitmap.close();
 
-        // Next pixel
-        i += 3;
-        j += 3;
-    }
+		const rgba = ctx.getImageData( 0, 0, size, size ).data;
+		const rgb = new Uint8Array( size * size * 3 );
 
-	postMessage( v1 );
+		for ( let i = 0, j = 0; i < rgb.length; i += 3, j += 4 ) {
+			rgb[ i ] = rgba[ j ];
+			rgb[ i + 1 ] = rgba[ j + 1 ];
+			rgb[ i + 2 ] = rgba[ j + 2 ];
+		}
+
+		postMessage( rgb, [ rgb.buffer ] );
+
+	}).catch( err => {
+		postMessage( { error: String( err ) } );
+	});
 };

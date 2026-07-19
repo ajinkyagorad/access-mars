@@ -9002,9 +9002,23 @@ var C4DExportLoader = exports.C4DExportLoader = function () {
 				_gltfLoader.GLTFLoader.load(src).then(function (data) {
 
 					var promises = [];
+					var parser = data.gltf.parser;
+					var jsonNodes = parser && parser.json ? parser.json.nodes : null;
 
 					data.gltf.scene.traverse(function (node) {
 						if (node.name.length === 0) node.name = node.uuid;
+
+						// three.js r184 deduplicates node names (foo -> foo_1),
+						// which corrupts the C4D metadata encoded in node names
+						// (e.g. XREF_wheel became XREF_wheel_1 -> 404). Recover
+						// the original glTF node name via parser associations.
+						if (parser && jsonNodes && parser.associations && parser.associations.has(node)) {
+							var nodeIndex = parser.associations.get(node).nodes;
+							if (nodeIndex !== undefined && jsonNodes[nodeIndex] && jsonNodes[nodeIndex].name) {
+								node.userData.c4dOriginalName = jsonNodes[nodeIndex].name;
+							}
+						}
+
 						promises.push(new _c4dMetadata.C4DMetadata(xrefPath, texPath).parse(node));
 					});
 
@@ -9327,7 +9341,10 @@ var C4DMetadata = exports.C4DMetadata = function () {
 			var _this = this;
 
 			return new Promise(function (resolve, reject) {
-				if (!obj.name.includes(METADATA_TAG)) {
+				// Prefer the original glTF node name: three.js r184 deduplicates
+				// Object3D names (foo -> foo_1), which corrupts encoded metadata.
+				var rawName = obj.userData.c4dOriginalName || obj.name;
+				if (!rawName.includes(METADATA_TAG)) {
 					resolve(null);return;
 				}
 
@@ -9335,7 +9352,7 @@ var C4DMetadata = exports.C4DMetadata = function () {
 				_this.mesh = _c4dUtils.C4DUtils.getChildWithType(_this.obj, 'Mesh');
 				_this.material = null;
 
-				_this.obj.metadata = GetMetadataFromName(_this.obj.name);
+				_this.obj.metadata = GetMetadataFromName(rawName);
 				_this.obj.metadata.object = _this.obj;
 				_this.obj.metadata.mesh = _this.mesh;
 
@@ -9375,7 +9392,10 @@ var C4DMetadata = exports.C4DMetadata = function () {
 				_this2.obj.metadata.texture = texLoader.load(src, function (texture) {
 					resolve();
 				}, function (progress) {}, function (error) {
-					reject(error);
+					// Non-fatal: a missing texture must not hang the whole scene load.
+					console.warn('C4DMetadata: texture failed to load:', src, error);
+					_this2.obj.metadata.texture = null;
+					resolve();
 				});
 			});
 		}
@@ -9401,7 +9421,10 @@ var C4DMetadata = exports.C4DMetadata = function () {
 				_this3.obj.metadata.highlightMap = texLoader.load(src, function (texture) {
 					resolve();
 				}, function (progress) {}, function (error) {
-					reject(error);
+					// Non-fatal: a missing texture must not hang the whole scene load.
+					console.warn('C4DMetadata: highlight map failed to load:', src, error);
+					_this3.obj.metadata.highlightMap = null;
+					resolve();
 				});
 			});
 		}
@@ -9427,6 +9450,10 @@ var C4DMetadata = exports.C4DMetadata = function () {
 				xrefLoader.load(src, _this4.xrefPath, _this4.texPath).then(function (response) {
 					response.scene.scale.copy(new THREE.Vector3(100, 100, 100));
 					_this4.obj.add(response.scene);
+					resolve();
+				}).catch(function (error) {
+					// Non-fatal: a missing xref must not hang the whole scene load.
+					console.warn('C4DMetadata: xref failed to load:', src, error);
 					resolve();
 				});
 			});
@@ -10802,7 +10829,7 @@ if (typeof AFRAME !== 'undefined' && AFRAME) {
 			});
 }
 
-},{"../core/scene":212,"../shaders/controller-ray-shader":223,"../utils/math-utils":245,"bezier-easing":13}],177:[function(require,module,exports){
+},{"../core/scene":212,"../shaders/controller-ray-shader":223,"../utils/math-utils":246,"bezier-easing":13}],177:[function(require,module,exports){
 'use strict';
 
 var _scene = require('../core/scene');
@@ -10939,7 +10966,7 @@ if (typeof AFRAME !== 'undefined' && AFRAME) {
 			});
 }
 
-},{"../core/scene":212,"../shaders/controller-dot-shader":222,"../utils/platform-utils":246}],178:[function(require,module,exports){
+},{"../core/scene":212,"../shaders/controller-dot-shader":222,"../utils/platform-utils":247}],178:[function(require,module,exports){
 'use strict';
 
 var _scene = require('../core/scene');
@@ -11099,7 +11126,7 @@ if (typeof AFRAME !== 'undefined' && AFRAME) {
 	});
 }
 
-},{"../core/scene":212,"../third_party/spite/mesh-line":239,"../third_party/spite/mesh-line-material":238,"bezier-easing":13}],179:[function(require,module,exports){
+},{"../core/scene":212,"../third_party/spite/mesh-line":240,"../third_party/spite/mesh-line-material":239,"bezier-easing":13}],179:[function(require,module,exports){
 'use strict';
 
 var _scene = require('../core/scene');
@@ -11516,7 +11543,7 @@ if (typeof AFRAME !== 'undefined' && AFRAME) {
 	});
 }
 
-},{"../core/colors":210,"../core/scene":212,"../utils/platform-utils":246}],184:[function(require,module,exports){
+},{"../core/colors":210,"../core/scene":212,"../utils/platform-utils":247}],184:[function(require,module,exports){
 'use strict';
 
 var _scene = require('../core/scene');
@@ -11861,7 +11888,7 @@ if (typeof AFRAME !== 'undefined' && AFRAME) {
 	});
 }
 
-},{"../core/colors":210,"../utils/math-utils":245}],186:[function(require,module,exports){
+},{"../core/colors":210,"../utils/math-utils":246}],186:[function(require,module,exports){
 'use strict';
 
 var _colors = require('../core/colors');
@@ -12141,7 +12168,7 @@ if (typeof AFRAME !== 'undefined' && AFRAME) {
 			});
 }
 
-},{"../core/colors":210,"../core/scene":212,"../meshes/card-mesh":217,"../meshes/card-mesh-image":216,"../utils/platform-utils":246}],187:[function(require,module,exports){
+},{"../core/colors":210,"../core/scene":212,"../meshes/card-mesh":217,"../meshes/card-mesh-image":216,"../utils/platform-utils":247}],187:[function(require,module,exports){
 'use strict';
 
 var _scene = require('../core/scene');
@@ -12353,6 +12380,14 @@ if (typeof AFRAME !== 'undefined' && AFRAME) {
 			var controller = document.getElementById('right-hand');
 			controller.addEventListener('buttonchanged', this.onControllerChangedRef);
 
+			// Belt and braces: also listen for the semantic trigger events
+			// emitted by oculus-touch-controls (WebXR path), in case
+			// buttonchanged is not delivered on a given runtime.
+			this.onTriggerDownRef = this.onControllerDown.bind(this);
+			this.onTriggerUpRef = this.onControllerUp.bind(this);
+			controller.addEventListener('triggerdown', this.onTriggerDownRef);
+			controller.addEventListener('triggerup', this.onTriggerUpRef);
+
 			this.onTouchRef = this.onTouch.bind(this);
 
 			if (AFRAME.utils.device.isMobile()) {
@@ -12364,6 +12399,8 @@ if (typeof AFRAME !== 'undefined' && AFRAME) {
 		tryRemovingControllerListeners: function tryRemovingControllerListeners() {
 			var controller = document.getElementById('right-hand');
 			controller.removeEventListener('buttonchanged', this.onControllerChangedRef);
+			controller.removeEventListener('triggerdown', this.onTriggerDownRef);
+			controller.removeEventListener('triggerup', this.onTriggerUpRef);
 
 			if (AFRAME.utils.device.isMobile()) {
 				this.el.sceneEl.removeEventListener('touchstart', this.onTouchRef);
@@ -12426,15 +12463,19 @@ if (typeof AFRAME !== 'undefined' && AFRAME) {
 				return;
 			};
 
-			requestAnimationFrame(function () {
+			// NOTE: window.requestAnimationFrame does NOT fire while an
+			// immersive WebXR session is presenting (only the XRSession rAF
+			// does), which froze the hold-to-skip timer on Quest. Timers
+			// still run, so use setTimeout instead.
+			setTimeout(function () {
 				if (!_this2.isControllerPressed) return;
 				_this2.timeCheck();
-			});
+			}, 16);
 		}
 	});
 }
 
-},{"../core/scene":212,"../utils/platform-utils":246,"eventemitter3":126}],188:[function(require,module,exports){
+},{"../core/scene":212,"../utils/platform-utils":247,"eventemitter3":126}],188:[function(require,module,exports){
 'use strict';
 
 var _scene = require('../core/scene');
@@ -12923,7 +12964,7 @@ if (typeof AFRAME !== 'undefined' && AFRAME) {
 			});
 }
 
-},{"../core/audio-manager":209,"../core/colors":210,"../core/scene":212,"../meshes/card-mesh":217,"../utils/platform-utils":246}],192:[function(require,module,exports){
+},{"../core/audio-manager":209,"../core/colors":210,"../core/scene":212,"../meshes/card-mesh":217,"../utils/platform-utils":247}],192:[function(require,module,exports){
 'use strict';
 
 var _colors = require('../core/colors');
@@ -13204,7 +13245,7 @@ if (typeof AFRAME !== 'undefined' && AFRAME) {
 	});
 }
 
-},{"../c4d/c4d-utils":173,"../core/colors":210,"../loaders/gltf-loader":214,"../shaders/map-path-shader":228,"../utils/math-utils":245,"bezier-easing":13}],194:[function(require,module,exports){
+},{"../c4d/c4d-utils":173,"../core/colors":210,"../loaders/gltf-loader":214,"../shaders/map-path-shader":228,"../utils/math-utils":246,"bezier-easing":13}],194:[function(require,module,exports){
 'use strict';
 
 var _colors = require('../core/colors');
@@ -13834,7 +13875,7 @@ if (typeof AFRAME !== 'undefined' && AFRAME) {
 			});
 }
 
-},{"../core/colors":210,"../core/scene":212,"../meshes/card-mesh":217,"../utils/platform-utils":246}],198:[function(require,module,exports){
+},{"../core/colors":210,"../core/scene":212,"../meshes/card-mesh":217,"../utils/platform-utils":247}],198:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -14212,7 +14253,7 @@ if (typeof AFRAME !== 'undefined' && AFRAME) {
 	});
 }
 
-},{"../c4d/c4d-export-loader":169,"../c4d/c4d-utils":173,"../shaders/uv-highpass-shader":234,"../utils/math-utils":245,"./poi-marker":198,"bezier-easing":13}],200:[function(require,module,exports){
+},{"../c4d/c4d-export-loader":169,"../c4d/c4d-utils":173,"../shaders/uv-highpass-shader":234,"../utils/math-utils":246,"./poi-marker":198,"bezier-easing":13}],200:[function(require,module,exports){
 'use strict';
 
 var _scene = require('../core/scene');
@@ -14361,7 +14402,7 @@ if (typeof AFRAME !== 'undefined' && AFRAME) {
 	});
 }
 
-},{"../c4d/c4d-export-loader":169,"../c4d/c4d-utils":173,"../core/scene":212,"../utils/math-utils":245,"./poi-marker":198,"bezier-easing":13}],201:[function(require,module,exports){
+},{"../c4d/c4d-export-loader":169,"../c4d/c4d-utils":173,"../core/scene":212,"../utils/math-utils":246,"./poi-marker":198,"bezier-easing":13}],201:[function(require,module,exports){
 'use strict';
 
 // Copyright 2017 Google Inc.
@@ -14510,11 +14551,13 @@ if (typeof AFRAME !== 'undefined' && AFRAME) {
 			this.isIntersected = false;
 			this.targetMaterials = [];
 
-			// The POI's hitbox is added thru a mesh-added event which 
+			// The POI's hitbox is added thru a mesh-added event which
 			// passes in the relevant hitbox mesh from the rover scene.
 			this.el.addEventListener('mesh-added', function (event) {
 				_this.metadata = event.detail.metadata;
-				_this.mesh = event.detail.children[0];
+				// three.js r184 collapses single-mesh nodes: the node may BE
+				// the Mesh rather than a Group containing one as children[0].
+				_this.mesh = event.detail.type === 'Mesh' ? event.detail : event.detail.children[0];
 				_this.mesh.material.visible = false;
 
 				_this.el.setObject3D('mesh', _this.mesh);
@@ -15221,6 +15264,8 @@ var _jpegWorker = require('../workers/jpeg-worker');
 
 var _mathUtils = require('../utils/math-utils');
 
+require('../third_party/bompo/progressive-texture');
+
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 var TerrainShader = require('../shaders/terrain-shader');
@@ -15341,26 +15386,44 @@ if (typeof AFRAME !== 'undefined' && AFRAME) {
 
 					// Loop through each node in the scene and separate out the tiles
 					// from the background and collision meshes.
+					//
+					// IMPORTANT: collect the nodes first, then build the wrappers.
+					// three.js r184 collapses single-mesh nodes, so SimpleTerrain /
+					// BackgroundTerrain reparent the node itself out of the scene
+					// graph (via setObject3D). Doing that while traverse() is
+					// iterating the same children array splices it mid-loop and
+					// crashes the traversal with undefined children.
+					var simpleNodes = [];
+					var backgroundNodes = [];
+					var tileNodes = [];
 					_this3.terrain.traverse(function (node) {
 						if (!node.metadata) return;
 
 						if (node.metadata.type === 'SIMPLE') {
-							_this3.collision = new SimpleTerrain(node);
-							_this3.collision.setVisible(_this3.isSimpleVisible);
-							return;
+							simpleNodes.push(node);return;
 						}
-
 						if (node.metadata.type === 'BACKGROUND') {
-							_this3.background = new BackgroundTerrain(node);
-							_this3.background.setVisible(_this3.isTerrainVisible);
-							return;
+							backgroundNodes.push(node);return;
 						}
-
 						if (node.metadata.type === 'TILE') {
-							var mesh = new TileMesh(node);
-							_this3.tileMeshes.push(mesh);
-							_this3.tileMeshesByID[mesh.id] = mesh;
+							tileNodes.push(node);
 						}
+					});
+
+					simpleNodes.forEach(function (node) {
+						_this3.collision = new SimpleTerrain(node);
+						_this3.collision.setVisible(_this3.isSimpleVisible);
+					});
+
+					backgroundNodes.forEach(function (node) {
+						_this3.background = new BackgroundTerrain(node);
+						_this3.background.setVisible(_this3.isTerrainVisible);
+					});
+
+					tileNodes.forEach(function (node) {
+						var mesh = new TileMesh(node);
+						_this3.tileMeshes.push(mesh);
+						_this3.tileMeshesByID[mesh.id] = mesh;
 					});
 
 					// Set up the simplified collision mesh
@@ -15498,7 +15561,7 @@ var TileMesh = function () {
 		this.animIn = 0;
 
 		// Remove unused color geometry attribute
-		this.mesh.geometry.removeAttribute('color');
+		this.mesh.geometry.deleteAttribute('color');
 
 		// Get the center coordinate of the tile by calculating the tile's bounding box.
 		// The center coordinate is used to sort tiles by distance from the player so that
@@ -15787,7 +15850,7 @@ var BackgroundTerrain = function () {
 		this.visible = false;
 
 		// Remove unused color geometry attribute
-		this.mesh.geometry.removeAttribute('color');
+		this.mesh.geometry.deleteAttribute('color');
 	}
 
 	_createClass(BackgroundTerrain, [{
@@ -15880,12 +15943,11 @@ var SimpleTerrain = function () {
 	_createClass(SimpleTerrain, [{
 		key: 'setupMesh',
 		value: function setupMesh() {
-			var terrainGeometry = this.mesh.geometry;
-
 			// Merge duplicate vertices left over from the mesh simplification process.
-			// In Three.js r125+, BufferGeometry.mergeVertices() replaces the old
-			// Geometry.fromBufferGeometry() / BufferGeometry.fromGeometry() round-trip.
-			terrainGeometry.mergeVertices();
+			// mergeVertices lives in BufferGeometryUtils (never was a BufferGeometry
+			// method) and returns a NEW geometry, so it must be reassigned.
+			var terrainGeometry = THREE.BufferGeometryUtils.mergeVertices(this.mesh.geometry);
+			this.mesh.geometry = terrainGeometry;
 
 			// Generate barycentric coordinates for each triangle vertex. This is used by the edge-shader
 			// to generate a wireframe effect.
@@ -15901,8 +15963,8 @@ var SimpleTerrain = function () {
 			terrainGeometry.setAttribute('center', new THREE.BufferAttribute(centers, 3));
 
 			// Remove unused geometry attributes
-			terrainGeometry.removeAttribute('uv');
-			terrainGeometry.removeAttribute('color');
+			terrainGeometry.deleteAttribute('uv');
+			terrainGeometry.deleteAttribute('color');
 
 			this.material = new THREE.ShaderMaterial({
 				uniforms: EdgeShader.uniforms,
@@ -15983,7 +16045,7 @@ var SimpleTerrain = function () {
 	return SimpleTerrain;
 }();
 
-},{"../c4d/c4d-export-loader":169,"../c4d/c4d-utils":173,"../core/common-tex":211,"../core/scene":212,"../shaders/edge-shader":224,"../shaders/terrain-shader":232,"../utils/math-utils":245,"../workers/jpeg-worker":248}],209:[function(require,module,exports){
+},{"../c4d/c4d-export-loader":169,"../c4d/c4d-utils":173,"../core/common-tex":211,"../core/scene":212,"../shaders/edge-shader":224,"../shaders/terrain-shader":232,"../third_party/bompo/progressive-texture":238,"../utils/math-utils":246,"../workers/jpeg-worker":249}],209:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -16827,7 +16889,7 @@ var StaticScene = function (_EventEmitter) {
 
 var Scene = exports.Scene = new StaticScene();
 
-},{"../utils/platform-utils":246,"./audio-manager":209,"./tile-manager":213,"eventemitter3":126}],213:[function(require,module,exports){
+},{"../utils/platform-utils":247,"./audio-manager":209,"./tile-manager":213,"eventemitter3":126}],213:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -17201,7 +17263,7 @@ var CardMeshBorder = exports.CardMeshBorder = function (_CardMesh) {
 		return CardMeshBorder;
 }(_cardMesh.CardMesh);
 
-},{"../core/colors":210,"../shaders/card-mesh-border-shader":218,"../utils/math-utils":245,"./card-mesh":217}],216:[function(require,module,exports){
+},{"../core/colors":210,"../shaders/card-mesh-border-shader":218,"../utils/math-utils":246,"./card-mesh":217}],216:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -17481,7 +17543,7 @@ var CardMesh = exports.CardMesh = function (_EventEmitter) {
 	return CardMesh;
 }(_eventemitter.EventEmitter);
 
-},{"../shaders/info-card-flat-shader":227,"../utils/math-utils":245,"bezier-easing":13,"eventemitter3":126}],218:[function(require,module,exports){
+},{"../shaders/info-card-flat-shader":227,"../utils/math-utils":246,"bezier-easing":13,"eventemitter3":126}],218:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -17997,7 +18059,9 @@ var FogVertex = exports.FogVertex = ['vec4 mvPosition = modelViewMatrix * vec4( 
 var FogParamsFrag = exports.FogParamsFrag = ['#define LOG2 1.442695', 'uniform vec3 fogColor;', 'uniform float fogDensity;', 'varying float fogDepth;'].join('\n');
 
 // Fog fragment shader calculations
-var FogFrag = exports.FogFrag = ['float fogFactor = 1.0 - saturate( exp2( -fogDensity * fogDensity * fogDepth * fogDepth * LOG2 ) );', 'gl_FragColor.rgb = mix( gl_FragColor.rgb, fogColor, fogFactor );'].join('\n');
+// NOTE: saturate() is a three.js ShaderChunk macro (common chunk) which is not
+// included in the project's custom shaders; use clamp() directly instead.
+var FogFrag = exports.FogFrag = ['float fogFactor = 1.0 - clamp( exp2( -fogDensity * fogDensity * fogDepth * fogDepth * LOG2 ), 0.0, 1.0 );', 'gl_FragColor.rgb = mix( gl_FragColor.rgb, fogColor, fogFactor );'].join('\n');
 
 },{}],231:[function(require,module,exports){
 'use strict';
@@ -18260,7 +18324,7 @@ var ExitButton = exports.ExitButton = function () {
 	return ExitButton;
 }();
 
-},{"../utils/platform-utils":246,"screenfull":142}],236:[function(require,module,exports){
+},{"../utils/platform-utils":247,"screenfull":142}],236:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -18489,7 +18553,7 @@ function initSplash() {
     return splash;
 }
 
-},{"../core/scene":212,"../utils/platform-utils":246,"./exit-button":235,"qs":138,"screenfull":142}],237:[function(require,module,exports){
+},{"../core/scene":212,"../utils/platform-utils":247,"./exit-button":235,"qs":138,"screenfull":142}],237:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -18647,6 +18711,132 @@ var ParabolicPointer = exports.ParabolicPointer = function () {
 },{"bezier-easing":13}],238:[function(require,module,exports){
 'use strict';
 
+// Copyright 2017 Google Inc.
+//
+//   Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+//   You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+//   Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+//   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//   See the License for the specific language governing permissions and
+//   limitations under the License.
+
+
+/**
+ * ProgressiveTexture
+ *
+ * Reimplementation of the bompo ProgressiveTexture used by the terrain
+ * component for high-resolution terrain tiles. The JPEG is fetched and
+ * decoded off the render thread (by the JPEG worker, which now uses
+ * createImageBitmap), and the decoded pixels are drawn onto a
+ * canvas-backed THREE.Texture.
+ *
+ * NOTE: this intentionally does NOT use `class X extends THREE.Texture`
+ * or `THREE.Texture.call( this )`: three.js r184 classes are native ES6
+ * classes and cannot be invoked without `new` (and Babel-transpiled
+ * subclasses of native classes break). Instead, a real THREE.Texture
+ * instance is created and the ProgressiveTexture API is mixed onto it.
+ * Calling this with `new` still works: a constructor that returns an
+ * object yields that object.
+ */
+
+function ProgressiveTexture(size) {
+
+	var canvas = document.createElement('canvas');
+	canvas.width = size;
+	canvas.height = size;
+
+	var texture = new THREE.Texture(canvas);
+	var context = canvas.getContext('2d');
+	var displayCompleteCallbacks = [];
+
+	texture.isProgressiveTexture = true;
+	texture.size = size;
+	texture.displayed = false;
+	texture.url = null;
+
+	// Registers a callback fired once the decoded image is displayed.
+	texture.onDisplayComplete = function (callback) {
+		if (texture.displayed) {
+			callback();return;
+		}
+		displayCompleteCallbacks.push(callback);
+	};
+
+	// Fetches the JPEG bytes and hands them to the worker for decoding.
+	texture.loadWithWorker = function (worker) {
+		var xhr = new XMLHttpRequest();
+		xhr.open('GET', texture.url, true);
+		xhr.responseType = 'arraybuffer';
+		xhr.onload = function () {
+			if (xhr.status === 200 || xhr.status === 0) {
+				worker.postMessage({ data: xhr.response, size: size }, [xhr.response]);
+			} else {
+				console.warn('ProgressiveTexture: fetch failed', xhr.status, texture.url);
+				finish();
+			}
+		};
+		xhr.onerror = function () {
+			console.warn('ProgressiveTexture: fetch error', texture.url);
+			finish();
+		};
+		xhr.send();
+	};
+
+	// Receives the decoded RGB pixels from the worker and uploads them.
+	texture.onWorkerMessage = function (event) {
+		if (!event.data || event.data.error) {
+			console.warn('ProgressiveTexture: decode failed', texture.url, event.data && event.data.error);
+			finish();
+			return;
+		}
+
+		var rgb = event.data; // Uint8Array, size * size * 3
+
+		try {
+			var imageData = context.createImageData(size, size);
+			var out = imageData.data;
+			for (var i = 0, j = 0; i < rgb.length && j + 3 < out.length; i += 3, j += 4) {
+				out[j] = rgb[i];
+				out[j + 1] = rgb[i + 1];
+				out[j + 2] = rgb[i + 2];
+				out[j + 3] = 255;
+			}
+			context.putImageData(imageData, 0, 0);
+			texture.needsUpdate = true;
+		} catch (err) {
+			console.warn('ProgressiveTexture: pixel upload failed', err);
+		}
+
+		finish();
+	};
+
+	function finish() {
+		texture.displayed = true;
+		while (displayCompleteCallbacks.length) {
+			var callback = displayCompleteCallbacks.shift();
+			try {
+				callback();
+			} catch (err) {
+				console.error(err);
+			}
+		}
+	}
+
+	return texture;
+}
+
+// Attach to the global THREE namespace (matches the original bompo API
+// surface that the terrain component was written against).
+THREE.ProgressiveTexture = ProgressiveTexture;
+
+},{}],239:[function(require,module,exports){
+'use strict';
+
 Object.defineProperty(exports, "__esModule", {
 	value: true
 });
@@ -18743,7 +18933,7 @@ MeshLineMaterial.prototype.copy = function (source) {
 	return this;
 };
 
-},{}],239:[function(require,module,exports){
+},{}],240:[function(require,module,exports){
 'use strict';
 
 ;(function () {
@@ -19110,7 +19300,7 @@ MeshLineMaterial.prototype.copy = function (source) {
 	}
 }).call(undefined);
 
-},{}],240:[function(require,module,exports){
+},{}],241:[function(require,module,exports){
 /* Auto-converted from Three.js r184 DRACOLoader for browserify */
 (function() {
 var THREE = window.THREE;
@@ -19856,7 +20046,7 @@ THREE.DRACOLoader = DRACOLoader;
 
 })();
 
-},{}],241:[function(require,module,exports){
+},{}],242:[function(require,module,exports){
 /* Auto-converted from Three.js r184 GLTFLoader for browserify */
 (function() {
 var THREE = window.THREE;
@@ -24723,7 +24913,7 @@ THREE.GLTFLoader = GLTFLoader;
 
 })();
 
-},{}],242:[function(require,module,exports){
+},{}],243:[function(require,module,exports){
 /* Auto-converted from Three.js r184 BufferGeometryUtils for browserify */
 (function() {
 var THREE = window.THREE;
@@ -26165,7 +26355,7 @@ THREE.BufferGeometryUtils = {
 
 })();
 
-},{}],243:[function(require,module,exports){
+},{}],244:[function(require,module,exports){
 /* Auto-converted from Three.js r184 SkeletonUtils for browserify */
 (function() {
 var THREE = window.THREE;
@@ -26673,7 +26863,7 @@ THREE.SkeletonUtils = {
 
 })();
 
-},{}],244:[function(require,module,exports){
+},{}],245:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -26727,7 +26917,7 @@ function testCompatibility() {
  *
  */
 
-},{"../utils/platform-utils":246}],245:[function(require,module,exports){
+},{"../utils/platform-utils":247}],246:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -26829,7 +27019,7 @@ var StaticMathUtils = function () {
 
 var MathUtils = exports.MathUtils = new StaticMathUtils();
 
-},{}],246:[function(require,module,exports){
+},{}],247:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -27003,7 +27193,7 @@ var StaticPlatformUtils = function () {
 
 var PlatformUtils = exports.PlatformUtils = new StaticPlatformUtils();
 
-},{"../core/scene":212}],247:[function(require,module,exports){
+},{"../core/scene":212}],248:[function(require,module,exports){
 'use strict';
 
 require('whatwg-fetch');
@@ -27090,7 +27280,7 @@ document.addEventListener("DOMContentLoaded", function () {
 	(0, _splash.initSplash)();
 });
 
-},{"./components/better-raycaster":174,"./components/boundary-sphere":175,"./components/controller-arc":176,"./components/controller-dot":177,"./components/controller-parabola":178,"./components/controller-ray":179,"./components/debug-trace":180,"./components/fade-to-black":181,"./components/frustum":182,"./components/hitbox":183,"./components/horizon-marker":184,"./components/info-card":186,"./components/info-card-text":185,"./components/intro-player":187,"./components/intro-video":188,"./components/look-at-target":189,"./components/map-background":190,"./components/map-card":191,"./components/map-marker":192,"./components/map-path":193,"./components/map-site-card":194,"./components/opacity":195,"./components/orientation-card":197,"./components/orientation-card-column":196,"./components/poi-marker":198,"./components/poi-pole":199,"./components/poi-spin-widget":200,"./components/poi-title-text":201,"./components/rover":203,"./components/rover-poi":202,"./components/scene-intro-label":204,"./components/sky-blackout":205,"./components/sky-gradient":206,"./components/sky-wireframe":207,"./components/terrain":208,"./splash/splash":236,"./third_party/three/draco-loader":240,"./third_party/three/gltf-loader":241,"./third_party/three/utils/BufferGeometryUtils":242,"./third_party/three/utils/SkeletonUtils":243,"./utils/compatibility":244,"promise-polyfill":136,"whatwg-fetch":168}],248:[function(require,module,exports){
+},{"./components/better-raycaster":174,"./components/boundary-sphere":175,"./components/controller-arc":176,"./components/controller-dot":177,"./components/controller-parabola":178,"./components/controller-ray":179,"./components/debug-trace":180,"./components/fade-to-black":181,"./components/frustum":182,"./components/hitbox":183,"./components/horizon-marker":184,"./components/info-card":186,"./components/info-card-text":185,"./components/intro-player":187,"./components/intro-video":188,"./components/look-at-target":189,"./components/map-background":190,"./components/map-card":191,"./components/map-marker":192,"./components/map-path":193,"./components/map-site-card":194,"./components/opacity":195,"./components/orientation-card":197,"./components/orientation-card-column":196,"./components/poi-marker":198,"./components/poi-pole":199,"./components/poi-spin-widget":200,"./components/poi-title-text":201,"./components/rover":203,"./components/rover-poi":202,"./components/scene-intro-label":204,"./components/sky-blackout":205,"./components/sky-gradient":206,"./components/sky-wireframe":207,"./components/terrain":208,"./splash/splash":236,"./third_party/three/draco-loader":241,"./third_party/three/gltf-loader":242,"./third_party/three/utils/BufferGeometryUtils":243,"./third_party/three/utils/SkeletonUtils":244,"./utils/compatibility":245,"promise-polyfill":136,"whatwg-fetch":168}],249:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -27144,4 +27334,4 @@ var StaticJPEGWorker = function StaticJPEGWorker() {
 
 var JPEGWorker = exports.JPEGWorker = new StaticJPEGWorker();
 
-},{}]},{},[247]);
+},{}]},{},[248]);

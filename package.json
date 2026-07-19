@@ -39,6 +39,9 @@
     "budo": "^9.4.7",
     "derequire": "^2.0.3",
     "discify": "^1.6.0",
+    "draco3d-old": "npm:draco3d@^1.2.6",
+    "draco3dgltf": "^1.5.7",
+    "puppeteer-core": "^25.3.0",
     "sass": "1.77.8"
   },
   "keywords": [
